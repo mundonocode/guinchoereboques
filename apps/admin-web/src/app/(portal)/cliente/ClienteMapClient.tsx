@@ -179,7 +179,7 @@ export function ClienteMapClient() {
                                 id,
                                 nome_completo, 
                                 telefone, 
-                                avatar_url,
+                                foto_url,
                                 veiculos_guincho (
                                     placa,
                                     tipo,
@@ -579,8 +579,8 @@ export function ClienteMapClient() {
                     <div className="p-5 pb-[30px] w-full">
                         <div className="flex items-center mb-6">
                             <div className="w-[60px] h-[60px] bg-gray-200 rounded-full flex items-center justify-center mr-4 shrink-0 overflow-hidden">
-                                {driverInfo?.avatar_url ? (
-                                    <img src={driverInfo.avatar_url} alt="Avatar" className="w-full h-full object-cover" />
+                                {driverInfo?.foto_url ? (
+                                    <img src={driverInfo.foto_url} alt="Avatar" className="w-full h-full object-cover" />
                                 ) : (
                                     <User size={32} className="text-gray-400" />
                                 )}
