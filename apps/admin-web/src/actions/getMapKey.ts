@@ -4,7 +4,7 @@ export async function getGoogleMapsApiKey() {
     const supabase = await createClient();
 
     try {
-        const { data, error } = await supabase.rpc('get_google_maps_key');
+        const { data, error } = await supabase.rpc('get_google_maps_key' as any);
 
         if (error) {
             console.error('Erro ao buscar chave do Google Maps:', error);
