@@ -66,6 +66,105 @@ export type Database = {
           },
         ]
       }
+      corridas: {
+        Row: {
+          id: string
+          cliente_id: string
+          motorista_id: string | null
+          origem_endereco: string
+          origem_lat: number
+          origem_lng: number
+          destino_endereco: string
+          destino_lat: number
+          destino_lng: number
+          valor: number
+          distancia_km: number
+          status: string
+          created_at: string
+          veiculo_placa: string | null
+          veiculo_cor: string | null
+          veiculo_marca_modelo: string | null
+          problema_descricao: string | null
+          problema_tipo: string | null
+          metodo_pagamento: string | null
+          foto_veiculo_frente_url: string | null
+          foto_veiculo_traseira_url: string | null
+          foto_veiculo_lateral_esq_url: string | null
+          foto_veiculo_lateral_dir_url: string | null
+          avarias_pre_existentes: string | null
+          assinatura_cliente_url: string | null
+        }
+        Insert: {
+          id?: string
+          cliente_id: string
+          motorista_id?: string | null
+          origem_endereco: string
+          origem_lat: number
+          origem_lng: number
+          destino_endereco: string
+          destino_lat: number
+          destino_lng: number
+          valor: number
+          distancia_km: number
+          status?: string
+          created_at?: string
+          veiculo_placa?: string | null
+          veiculo_cor?: string | null
+          veiculo_marca_modelo?: string | null
+          problema_descricao?: string | null
+          problema_tipo?: string | null
+          metodo_pagamento?: string | null
+          foto_veiculo_frente_url?: string | null
+          foto_veiculo_traseira_url?: string | null
+          foto_veiculo_lateral_esq_url?: string | null
+          foto_veiculo_lateral_dir_url?: string | null
+          avarias_pre_existentes?: string | null
+          assinatura_cliente_url?: string | null
+        }
+        Update: {
+          id?: string
+          cliente_id?: string
+          motorista_id?: string | null
+          origem_endereco?: string
+          origem_lat?: number
+          origem_lng?: number
+          destino_endereco?: string
+          destino_lat?: number
+          destino_lng?: number
+          valor?: number
+          distancia_km?: number
+          status?: string
+          created_at?: string
+          veiculo_placa?: string | null
+          veiculo_cor?: string | null
+          veiculo_marca_modelo?: string | null
+          problema_descricao?: string | null
+          problema_tipo?: string | null
+          metodo_pagamento?: string | null
+          foto_veiculo_frente_url?: string | null
+          foto_veiculo_traseira_url?: string | null
+          foto_veiculo_lateral_esq_url?: string | null
+          foto_veiculo_lateral_dir_url?: string | null
+          avarias_pre_existentes?: string | null
+          assinatura_cliente_url?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "corridas_cliente_id_fkey"
+            columns: ["cliente_id"]
+            isOneToOne: false
+            referencedRelation: "perfis"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "corridas_motorista_id_fkey"
+            columns: ["motorista_id"]
+            isOneToOne: false
+            referencedRelation: "perfis"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
       mensagens_chat: {
         Row: {
           id: string
@@ -156,7 +255,9 @@ export type Database = {
           foto_url: string | null
           id: string
           is_active: boolean | null
+          is_online: boolean | null
           nome_completo: string
+          onboarding_completo: boolean | null
           role: string
           telefone: string | null
           updated_at: string
@@ -167,7 +268,9 @@ export type Database = {
           foto_url?: string | null
           id: string
           is_active?: boolean | null
+          is_online?: boolean | null
           nome_completo: string
+          onboarding_completo?: boolean | null
           role: string
           telefone?: string | null
           updated_at?: string
@@ -178,7 +281,9 @@ export type Database = {
           foto_url?: string | null
           id?: string
           is_active?: boolean | null
+          is_online?: boolean | null
           nome_completo?: string
+          onboarding_completo?: boolean | null
           role?: string
           telefone?: string | null
           updated_at?: string

@@ -7,6 +7,9 @@ export async function updateSession(request: NextRequest) {
         request,
     })
 
+    // Adiciona o pathname nos headers para acesso em Server Components
+    supabaseResponse.headers.set('x-pathname', request.nextUrl.pathname)
+
     const supabase = createServerClient<Database>(
         process.env.NEXT_PUBLIC_SUPABASE_URL!,
         process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
@@ -43,7 +46,9 @@ export async function updateSession(request: NextRequest) {
         !request.nextUrl.pathname.startsWith('/auth') &&
         !request.nextUrl.pathname.startsWith('/cadastro-motorista') &&
         !request.nextUrl.pathname.startsWith('/para-empresas') &&
-        !request.nextUrl.pathname.startsWith('/cadastro')
+        !request.nextUrl.pathname.startsWith('/cadastro') &&
+        !request.nextUrl.pathname.startsWith('/manifest.webmanifest') &&
+        !request.nextUrl.pathname.startsWith('/icon')
     ) {
         // no user, potentially respond by redirecting the user to the login page
         const url = request.nextUrl.clone()

@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { View, Text, StyleSheet, TextInput, TouchableOpacity, ScrollView, SafeAreaView, Platform } from 'react-native';
 import { useRouter } from 'expo-router';
-import { ArrowLeft, Car } from 'lucide-react-native';
+import { ArrowLeft } from 'lucide-react-native';
 import { useRequestStore } from '../../store/useRequestStore';
 
 export default function RequestDetailsScreen() {
@@ -40,12 +40,6 @@ export default function RequestDetailsScreen() {
             </View>
 
             <ScrollView style={styles.container} contentContainerStyle={styles.content}>
-                <View style={styles.infoBanner}>
-                    <View style={styles.iconCircle}>
-                        <Car size={32} color="#9CA3AF" />
-                    </View>
-                    <Text style={styles.infoBannerText}>Informações do veículo em pane</Text>
-                </View>
 
                 <View style={styles.row}>
                     <View style={styles.halfInput}>
@@ -155,27 +149,6 @@ const styles = StyleSheet.create({
     },
     content: {
         padding: 24,
-    },
-    infoBanner: {
-        backgroundColor: '#F9FAFB',
-        borderRadius: 16,
-        padding: 24,
-        alignItems: 'center',
-        marginBottom: 32,
-    },
-    iconCircle: {
-        width: 64,
-        height: 64,
-        borderRadius: 32,
-        backgroundColor: '#E5E7EB',
-        justifyContent: 'center',
-        alignItems: 'center',
-        marginBottom: 12,
-    },
-    infoBannerText: {
-        fontSize: 14,
-        color: '#6B7280',
-        fontWeight: '500',
     },
     row: {
         flexDirection: 'row',

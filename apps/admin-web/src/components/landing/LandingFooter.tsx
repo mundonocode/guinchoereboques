@@ -31,19 +31,19 @@ export function LandingFooter() {
                 <div className="flex-1 max-w-[200px] space-y-8">
                     <div className="space-y-4">
                         <h4 className="text-[16px] font-bold text-white tracking-tight">Faça o Download</h4>
-                        <div className="flex flex-col gap-3">
-                            <button className="bg-white hover:bg-zinc-200 transition-colors rounded-md px-4 py-2 flex items-center justify-center gap-3 w-[160px]">
-                                <img src="/apple-icon.png" className="w-5 h-5 object-contain invert" alt="Apple" />
-                                <div className="flex flex-col items-start leading-none text-black">
-                                    <span className="text-[8px] uppercase tracking-widest font-medium">Download on the</span>
-                                    <span className="font-bold text-[11px]">APPLE STORE</span>
+                        <div className="flex flex-col gap-4">
+                            <button className="bg-black text-white hover:bg-zinc-800 transition-colors border border-zinc-800 rounded-xl px-5 py-2.5 flex items-center justify-center gap-3 w-full sm:w-auto min-w-[170px]">
+                                <img src="/apple-icon.png" className="w-[24px] h-[24px] object-contain" alt="Apple" />
+                                <div className="flex flex-col items-start leading-none text-left">
+                                    <span className="text-[10px] text-zinc-300 mb-1">Baixar na</span>
+                                    <span className="text-[16px] font-bold">App Store</span>
                                 </div>
                             </button>
-                            <button className="bg-white hover:bg-zinc-200 transition-colors rounded-md px-4 py-2 flex items-center justify-center gap-3 w-[160px]">
-                                <img src="/google-play-icon.png" className="w-5 h-5 object-contain" alt="Google Play" />
-                                <div className="flex flex-col items-start leading-none text-black">
-                                    <span className="text-[8px] uppercase tracking-widest font-medium">Download on the</span>
-                                    <span className="font-bold text-[11px]">Google Play</span>
+                            <button className="bg-black text-white hover:bg-zinc-800 transition-colors border border-zinc-800 rounded-xl px-5 py-2.5 flex items-center justify-center gap-3 w-full sm:w-auto min-w-[170px]">
+                                <img src="/google-play-icon.png" className="w-[24px] h-[24px] object-contain" alt="Google Play" />
+                                <div className="flex flex-col items-start leading-none text-left">
+                                    <span className="text-[10px] text-zinc-300 mb-1">Disponível no</span>
+                                    <span className="text-[16px] font-bold">Google Play</span>
                                 </div>
                             </button>
                         </div>

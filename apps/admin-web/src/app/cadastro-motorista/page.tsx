@@ -50,7 +50,7 @@ export default function CadastroMotoristaPage() {
                                 </span>
                             </div>
 
-                            <h1 className="text-4xl md:text-[40px] font-poppins font-bold text-black leading-[1.05] tracking-tight">
+                            <h1 className="text-4xl md:text-[40px] font-bold text-black leading-[1.05] tracking-tight">
                                 Pare de buscar clientes.<br />
                                 Deixe eles encontrarem você
                             </h1>
@@ -98,7 +98,7 @@ export default function CadastroMotoristaPage() {
                         </div>
 
                         <div className="order-1 lg:order-2 space-y-6">
-                            <h2 className="text-[36px] font-poppins font-medium leading-[1.2] text-black max-w-[500px]">
+                            <h2 className="text-[36px] font-bold leading-[1.2] text-black max-w-[500px]">
                                 Para quais profissionais o Guinchos e Reboques é ideal?
                             </h2>
 
@@ -132,7 +132,7 @@ export default function CadastroMotoristaPage() {
                             Cobertura Nacional Ativa
                             <span className="absolute -right-4 top-1 w-2 h-2 rounded-full bg-amber-500 animate-pulse"></span>
                         </span>
-                        <h2 className="text-[36px] font-poppins font-medium text-white max-w-4xl mx-auto leading-[1.2]">
+                        <h2 className="text-[36px] font-bold text-white max-w-4xl mx-auto leading-[1.2]">
                             Nossa rede já opera em múltiplas regiões, mas recebemos parceiros de <span className="text-amber-500">qualquer estado</span> brasileiro.
                         </h2>
                     </div>
@@ -145,7 +145,7 @@ export default function CadastroMotoristaPage() {
                             <div className="flex items-center gap-2 mb-6">
                                 <img src="/features-icon-orange.png" alt="Guincho" className="w-[124px] h-[38px] object-contain object-left block" />
                             </div>
-                            <h2 className="text-[36px] font-poppins font-bold text-black leading-tight max-w-xl mb-4 text-balance">
+                            <h2 className="text-[36px] font-bold text-black leading-tight max-w-xl mb-4 text-balance">
                                 Crescimento para<br />autônomos e empresa
                             </h2>
                             <p className="text-[14px] font-medium text-zinc-600 max-w-2xl text-balance">
@@ -206,7 +206,7 @@ export default function CadastroMotoristaPage() {
 
                             {/* Text on the Right */}
                             <div className="space-y-8 lg:pl-12 order-1 lg:order-2">
-                                <h2 className="text-[36px] font-poppins font-medium text-black leading-[1.1] tracking-tight">
+                                <h2 className="text-[36px] font-bold text-black leading-[1.1] tracking-tight">
                                     Não perca tempo e baixe agora.
                                 </h2>
                                 <p className="text-[16px] font-medium text-zinc-600 leading-relaxed max-w-lg">
@@ -215,18 +215,18 @@ export default function CadastroMotoristaPage() {
                                     onde você estiver e na hora que quiser, pronto para qualquer emergência.
                                 </p>
                                 <div className="pt-4 flex flex-col sm:flex-row gap-4">
-                                    <button className="bg-black text-white hover:bg-zinc-800 transition-all border border-transparent rounded-lg px-6 py-4 flex items-center justify-center gap-3 w-full sm:w-auto">
-                                        <img src="/apple-icon.png" className="w-6 h-6 object-contain" alt="Apple" />
-                                        <div className="flex flex-col items-start leading-none">
-                                            <span className="text-[10px] text-zinc-300 uppercase tracking-widest mb-1">Baixar na</span>
-                                            <span className="font-bold text-sm">App Store</span>
+                                    <button className="bg-black text-white hover:bg-zinc-800 transition-colors rounded-xl px-5 py-2.5 flex items-center justify-center gap-3 w-full sm:w-auto min-w-[160px]">
+                                        <img src="/apple-icon.png" className="w-[24px] h-[24px] object-contain" alt="Apple" />
+                                        <div className="flex flex-col items-start leading-none text-left">
+                                            <span className="text-[10px] text-zinc-300 mb-1">Baixar na</span>
+                                            <span className="text-[16px] font-bold">App Store</span>
                                         </div>
                                     </button>
-                                    <button className="bg-black text-white hover:bg-zinc-800 transition-all border border-transparent rounded-lg px-6 py-4 flex items-center justify-center gap-3 w-full sm:w-auto">
-                                        <img src="/google-play-icon.png" className="w-6 h-6 object-contain" alt="Google Play" />
-                                        <div className="flex flex-col items-start leading-none">
-                                            <span className="text-[10px] text-zinc-300 uppercase tracking-widest mb-1">Baixar no</span>
-                                            <span className="font-bold text-sm">Google Play</span>
+                                    <button className="bg-black text-white hover:bg-zinc-800 transition-colors rounded-xl px-5 py-2.5 flex items-center justify-center gap-3 w-full sm:w-auto min-w-[160px]">
+                                        <img src="/google-play-icon.png" className="w-[24px] h-[24px] object-contain" alt="Google Play" />
+                                        <div className="flex flex-col items-start leading-none text-left">
+                                            <span className="text-[10px] text-zinc-300 mb-1">Disponível no</span>
+                                            <span className="text-[16px] font-bold">Google Play</span>
                                         </div>
                                     </button>
                                 </div>
@@ -239,7 +239,7 @@ export default function CadastroMotoristaPage() {
                 {/* FAQ SECTION */}
                 <section id="faq" className="py-24 px-6 md:px-12 bg-white">
                     <div className="max-w-3xl mx-auto">
-                        <h2 className="text-[32px] md:text-[36px] font-poppins font-medium text-black text-center mb-16 tracking-tight">
+                        <h2 className="text-[32px] md:text-[36px] font-bold text-black text-center mb-16 tracking-tight">
                             Por que manter o Guinchos e Reboques sempre à mão?
                         </h2>
                         <div className="border-t border-zinc-200">

@@ -82,7 +82,7 @@ export default function RegisterPage() {
                     <div className="flex justify-center mb-10">
                         <img src="/logo-oficial.png.png" alt="Guinchos e Reboques" className="w-[200px] h-auto object-contain" />
                     </div>
-                    <h2 className="text-[46px] font-poppins font-medium mb-8 leading-[1.1] tracking-tight text-white">
+                    <h2 className="text-[46px] font-bold mb-8 leading-[1.1] tracking-tight text-white">
                         Junte-se à maior rede de <span className="font-bold text-amber-500">socorro veicular.</span>
                     </h2>
                     <p className="text-[17px] text-white/60 font-medium leading-relaxed max-w-lg mx-auto">
@@ -98,7 +98,7 @@ export default function RegisterPage() {
                         <Link href="/login" className="inline-flex items-center gap-2 text-[13px] font-bold text-zinc-400 hover:text-black transition-colors uppercase tracking-wider mb-4">
                             <ArrowLeft size={16} /> Voltar para login
                         </Link>
-                        <h3 className="text-[32px] font-poppins font-bold tracking-tight text-black leading-tight">Criar nova conta</h3>
+                        <h3 className="text-[32px] font-bold tracking-tight text-black leading-tight">Criar nova conta</h3>
                         <p className="text-[15px] text-zinc-500 font-medium">Preencha os campos abaixo para começar.</p>
                     </div>
 
@@ -171,8 +171,8 @@ export default function RegisterPage() {
                                         type="button"
                                         onClick={() => setRole('cliente')}
                                         className={`flex flex-col items-center justify-center p-4 rounded-2xl border-2 transition-all gap-2 ${role === 'cliente'
-                                                ? 'bg-black border-black text-white'
-                                                : 'bg-zinc-50 border-zinc-200 text-zinc-500 hover:border-zinc-300'
+                                            ? 'bg-black border-black text-white'
+                                            : 'bg-zinc-50 border-zinc-200 text-zinc-500 hover:border-zinc-300'
                                             }`}
                                     >
                                         <User size={24} />
@@ -182,8 +182,8 @@ export default function RegisterPage() {
                                         type="button"
                                         onClick={() => setRole('motorista')}
                                         className={`flex flex-col items-center justify-center p-4 rounded-2xl border-2 transition-all gap-2 ${role === 'motorista'
-                                                ? 'bg-black border-black text-white'
-                                                : 'bg-zinc-50 border-zinc-200 text-zinc-500 hover:border-zinc-300'
+                                            ? 'bg-black border-black text-white'
+                                            : 'bg-zinc-50 border-zinc-200 text-zinc-500 hover:border-zinc-300'
                                             }`}
                                     >
                                         <Briefcase size={24} />

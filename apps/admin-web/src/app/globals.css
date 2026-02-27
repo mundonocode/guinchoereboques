@@ -23,13 +23,36 @@
   --radius-xl: 1rem;
 
   --font-poppins: var(--font-poppins);
+  --font-roboto: var(--font-roboto);
+  --font-sans: var(--font-roboto), ui-sans-serif, system-ui, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: 'Inter', sans-serif;
+  font-family: var(--font-sans);
   -webkit-font-smoothing: antialiased;
+  /* Prevent bounce effect on iOS */
+  overscroll-behavior-y: none;
+}
+
+/* 
+ Fix iOS Safari auto-zoom on forms: 
+ Inputs must be at least 16px to prevent zoom
+*/
+input,
+textarea,
+select {
+  font-size: 16px !important;
+}
+
+/* Prevent double tab zoom */
+button,
+a,
+input,
+select,
+textarea {
+  touch-action: manipulation;
 }
 
 @layer base {

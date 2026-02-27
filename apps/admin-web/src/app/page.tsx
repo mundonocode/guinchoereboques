@@ -58,7 +58,7 @@ export default function LandingPage() {
                                 </span>
                             </div>
 
-                            <h1 className="text-[40px] md:text-[46px] font-poppins font-medium text-black leading-[1.1] tracking-tight">
+                            <h1 className="text-[40px] md:text-[46px] font-bold text-black leading-[1.1] tracking-tight">
                                 O app que encontra seu guincho mais próximo <span className="font-bold">em instantes.</span>
                             </h1>
 
@@ -69,18 +69,18 @@ export default function LandingPage() {
 
                             <div className="pt-2">
                                 <div className="flex flex-col sm:flex-row gap-4 mb-4">
-                                    <button className="bg-black text-white hover:bg-zinc-800 transition-all border border-transparent rounded-[10px] px-6 py-3 flex items-center justify-center gap-3 w-full sm:w-[190px]">
-                                        <img src="/apple-icon.png" className="w-[18px] object-contain" alt="Apple" />
-                                        <div className="flex flex-col items-start leading-[1.1]">
-                                            <span className="text-[9px] text-zinc-300 font-medium tracking-widest mb-0.5">Download on the</span>
-                                            <span className="font-bold text-[13px]">APPLE STORE</span>
+                                    <button className="bg-black text-white hover:bg-zinc-800 transition-colors rounded-xl px-5 py-2.5 flex items-center justify-center gap-3 w-full sm:w-auto min-w-[160px]">
+                                        <img src="/apple-icon.png" className="w-[24px] h-[24px] object-contain" alt="Apple" />
+                                        <div className="flex flex-col items-start leading-none text-left">
+                                            <span className="text-[10px] text-zinc-300 mb-1">Baixar na</span>
+                                            <span className="text-[16px] font-bold">App Store</span>
                                         </div>
                                     </button>
-                                    <button className="bg-black text-white hover:bg-zinc-800 transition-all border border-transparent rounded-[10px] px-6 py-3 flex items-center justify-center gap-3 w-full sm:w-[190px]">
-                                        <img src="/google-play-icon.png" className="w-[18px] object-contain" alt="Google Play" />
-                                        <div className="flex flex-col items-start leading-[1.1]">
-                                            <span className="text-[9px] text-zinc-300 font-medium tracking-widest mb-0.5">Download on the</span>
-                                            <span className="font-bold text-[13px]">Google Play</span>
+                                    <button className="bg-black text-white hover:bg-zinc-800 transition-colors rounded-xl px-5 py-2.5 flex items-center justify-center gap-3 w-full sm:w-auto min-w-[160px]">
+                                        <img src="/google-play-icon.png" className="w-[24px] h-[24px] object-contain" alt="Google Play" />
+                                        <div className="flex flex-col items-start leading-none text-left">
+                                            <span className="text-[10px] text-zinc-300 mb-1">Disponível no</span>
+                                            <span className="text-[16px] font-bold">Google Play</span>
                                         </div>
                                     </button>
                                 </div>
@@ -121,7 +121,7 @@ export default function LandingPage() {
                 <section className="py-24 px-6 md:px-12 bg-[#F8F9FA]">
                     <div className="max-w-[75rem] mx-auto">
                         <div className="text-center mb-16 max-w-4xl mx-auto">
-                            <h2 className="text-[36px] font-poppins font-medium text-black leading-tight mb-4">
+                            <h2 className="text-[36px] font-bold text-black leading-tight mb-4">
                                 Por que manter o Guinchos e Reboques sempre à mão?
                             </h2>
                             <p className="text-[15px] font-medium text-zinc-600 max-w-2xl mx-auto">
@@ -136,7 +136,7 @@ export default function LandingPage() {
                                 <div className="flex items-center gap-3 text-black mb-6">
                                     <img src="/tow-truck-icon.png" className="w-[56px] h-auto object-contain" alt="Tow Truck Icon" />
                                 </div>
-                                <h3 className="text-[22px] font-poppins font-medium text-black mb-4 leading-snug">
+                                <h3 className="text-[22px] font-bold text-black mb-4 leading-snug">
                                     Socorro 24/7: Assistência sempre ao seu alcance
                                 </h3>
                                 <p className="text-[15px] font-medium text-zinc-600 mb-8 max-w-sm">
@@ -198,7 +198,7 @@ export default function LandingPage() {
                     <div className="max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-24 items-center">
                         <div className="space-y-8 order-2 lg:order-1 flex flex-col items-center lg:items-start text-center lg:text-left">
                             <div className="space-y-4">
-                                <h2 className="text-[36px] font-poppins font-medium text-black leading-tight">
+                                <h2 className="text-[36px] font-bold text-black leading-tight">
                                     Soluções completas no aplicativo
                                 </h2>
                                 <p className="text-[16px] font-medium text-zinc-500 leading-relaxed max-w-sm">
@@ -218,19 +218,19 @@ export default function LandingPage() {
                                 </div>
                             </div>
 
-                            <div className="flex flex-wrap gap-3 justify-center lg:justify-start">
-                                <button className="bg-black text-white hover:bg-zinc-800 transition-all border border-transparent rounded-[10px] px-5 py-2.5 flex items-center justify-center gap-2.5 w-[170px]">
-                                    <img src="/apple-icon.png" className="w-[16px] object-contain" alt="Apple" />
-                                    <div className="flex flex-col items-start leading-[1.1]">
-                                        <span className="text-[7px] text-zinc-300 font-medium tracking-widest mb-0.5 uppercase">Download on the</span>
-                                        <span className="font-bold text-[11px]">APPLE STORE</span>
+                            <div className="flex flex-wrap gap-4 justify-center lg:justify-start pt-4">
+                                <button className="bg-black text-white hover:bg-zinc-800 transition-colors rounded-xl px-5 py-2.5 flex items-center justify-center gap-3 w-full sm:w-auto min-w-[160px]">
+                                    <img src="/apple-icon.png" className="w-[24px] h-[24px] object-contain" alt="Apple" />
+                                    <div className="flex flex-col items-start leading-none text-left">
+                                        <span className="text-[10px] text-zinc-300 mb-1">Baixar na</span>
+                                        <span className="text-[16px] font-bold">App Store</span>
                                     </div>
                                 </button>
-                                <button className="bg-black text-white hover:bg-zinc-800 transition-all border border-transparent rounded-[10px] px-5 py-2.5 flex items-center justify-center gap-2.5 w-[170px]">
-                                    <img src="/google-play-icon.png" className="w-[16px] object-contain" alt="Google Play" />
-                                    <div className="flex flex-col items-start leading-[1.1]">
-                                        <span className="text-[7px] text-zinc-300 font-medium tracking-widest mb-0.5 uppercase">Download on the</span>
-                                        <span className="font-bold text-[11px]">Google Play</span>
+                                <button className="bg-black text-white hover:bg-zinc-800 transition-colors rounded-xl px-5 py-2.5 flex items-center justify-center gap-3 w-full sm:w-auto min-w-[160px]">
+                                    <img src="/google-play-icon.png" className="w-[24px] h-[24px] object-contain" alt="Google Play" />
+                                    <div className="flex flex-col items-start leading-none text-left">
+                                        <span className="text-[10px] text-zinc-300 mb-1">Disponível no</span>
+                                        <span className="text-[16px] font-bold">Google Play</span>
                                     </div>
                                 </button>
                             </div>
@@ -253,7 +253,7 @@ export default function LandingPage() {
                         <span className="text-amber-500 font-bold tracking-[0.2em] uppercase text-xs">
                             Solução em emergência pessoal
                         </span>
-                        <h2 className="text-[22px] sm:text-[28px] md:text-[36px] font-poppins font-medium text-white max-w-none mx-auto leading-tight">
+                        <h2 className="text-[22px] sm:text-[28px] md:text-[36px] font-bold text-white max-w-none mx-auto leading-tight">
                             Livre de burocracia, não importa se você tem seguro o <br /> Guinchos e Reboques funciona para todos.
                         </h2>
                     </div>
@@ -271,25 +271,25 @@ export default function LandingPage() {
                         </div>
 
                         <div className="space-y-8 order-1 lg:order-2 lg:pl-12">
-                            <h2 className="text-[36px] font-poppins font-medium text-black leading-tight tracking-tight">
+                            <h2 className="text-[36px] font-bold text-black leading-tight tracking-tight">
                                 Não perca tempo e baixe agora.
                             </h2>
                             <p className="text-[16px] font-medium text-zinc-600 leading-relaxed max-w-lg">
                                 Esteja sempre um passo à frente. Não deixe para instalar na hora do desespero. Com o Guinchos e Reboques no seu celular, você tem acesso imediato aos melhores profissionais para qualquer imprevisto.
                             </p>
                             <div className="pt-4 flex flex-col sm:flex-row gap-4">
-                                <button className="bg-black text-white hover:bg-zinc-800 transition-all border border-transparent rounded-[10px] px-6 py-3 flex items-center justify-center gap-3 w-full sm:w-[190px]">
-                                    <img src="/apple-icon.png" className="w-[18px] object-contain" alt="Apple" />
-                                    <div className="flex flex-col items-start leading-[1.1]">
-                                        <span className="text-[9px] text-zinc-300 font-medium tracking-widest mb-0.5 uppercase">Download on the</span>
-                                        <span className="font-bold text-[13px]">APPLE STORE</span>
+                                <button className="bg-black text-white hover:bg-zinc-800 transition-colors rounded-xl px-5 py-2.5 flex items-center justify-center gap-3 w-full sm:w-auto min-w-[160px]">
+                                    <img src="/apple-icon.png" className="w-[24px] h-[24px] object-contain" alt="Apple" />
+                                    <div className="flex flex-col items-start leading-none text-left">
+                                        <span className="text-[10px] text-zinc-300 mb-1">Baixar na</span>
+                                        <span className="text-[16px] font-bold">App Store</span>
                                     </div>
                                 </button>
-                                <button className="bg-black text-white hover:bg-zinc-800 transition-all border border-transparent rounded-[10px] px-6 py-3 flex items-center justify-center gap-3 w-full sm:w-[190px]">
-                                    <img src="/google-play-icon.png" className="w-[18px] object-contain" alt="Google Play" />
-                                    <div className="flex flex-col items-start leading-[1.1]">
-                                        <span className="text-[9px] text-zinc-300 font-medium tracking-widest mb-0.5 uppercase">Download on the</span>
-                                        <span className="font-bold text-[13px]">GOOGLE PLAY</span>
+                                <button className="bg-black text-white hover:bg-zinc-800 transition-colors rounded-xl px-5 py-2.5 flex items-center justify-center gap-3 w-full sm:w-auto min-w-[160px]">
+                                    <img src="/google-play-icon.png" className="w-[24px] h-[24px] object-contain" alt="Google Play" />
+                                    <div className="flex flex-col items-start leading-none text-left">
+                                        <span className="text-[10px] text-zinc-300 mb-1">Disponível no</span>
+                                        <span className="text-[16px] font-bold">Google Play</span>
                                     </div>
                                 </button>
                             </div>
@@ -300,7 +300,7 @@ export default function LandingPage() {
                 {/* FAQ SECTION */}
                 <section id="faq" className="py-24 px-6 md:px-12 bg-white">
                     <div className="max-w-3xl mx-auto">
-                        <h2 className="text-[32px] md:text-[36px] font-poppins font-medium text-black text-center mb-16 tracking-tight">
+                        <h2 className="text-[32px] md:text-[36px] font-bold text-black text-center mb-16 tracking-tight">
                             Perguntas Comuns Respondidas
                         </h2>
                         <div className="border-t border-zinc-200">

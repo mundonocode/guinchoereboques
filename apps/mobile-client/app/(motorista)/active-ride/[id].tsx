@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Dimensions, ActivityIndicator, Alert, Linking, Platform } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Dimensions, ActivityIndicator, Alert, Linking, Platform, Image as RNImage } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import MapView, { Marker, PROVIDER_DEFAULT } from 'react-native-maps';
 import MapViewDirections from 'react-native-maps-directions';
@@ -159,6 +159,25 @@ export default function ActiveRideScreen() {
                 initialRegion={initialRegion}
                 showsUserLocation={true}
             >
+                {location && (
+                    <Marker
+                        coordinate={{
+                            latitude: location.coords.latitude,
+                            longitude: location.coords.longitude
+                        }}
+                        title="Minha Localização"
+                        anchor={{ x: 0.5, y: 0.5 }}
+                    >
+                        <View style={styles.driverMarkerContainer}>
+                            <RNImage
+                                source={require('../../../assets/images/marker-guincho.png')}
+                                style={styles.markerImage}
+                                resizeMode="cover"
+                            />
+                        </View>
+                    </Marker>
+                )}
+
                 {targetLat && targetLng && (
                     <Marker
                         coordinate={{ latitude: targetLat, longitude: targetLng }}
@@ -226,99 +245,127 @@ export default function ActiveRideScreen() {
                     </TouchableOpacity>
                 </View>
 
-                {ride.status === 'aceita' && (
-                    <TouchableOpacity
-                        style={styles.mainBtn}
-                        onPress={() => updateRideStatus('a_caminho')}
-                        disabled={statusUpdating}
-                    >
-                        {statusUpdating ? <ActivityIndicator color="#FFF" /> : (
-                            <>
-                                <Truck size={20} color="#FFF" style={styles.btnIcon} />
-                                <Text style={styles.mainBtnText}>Estou a Caminho</Text>
-                            </>
-                        )}
-                    </TouchableOpacity>
-                )}
+                <View style={styles.detailsContainer}>
+                    <Text style={styles.detailsTitle}>VEÍCULO & PROBLEMA</Text>
+                    <View style={styles.detailCard}>
+                        <View style={styles.detailRow}>
+                            <Truck size={16} color="#4B5563" />
+                            <Text style={styles.detailText}>
+                                <Text style={{ fontWeight: '700' }}>{ride.veiculo_marca_modelo || 'Não informado'}</Text> - {ride.veiculo_cor || 'N/A'} ({ride.veiculo_placa || 'Sem placa'})
+                            </Text>
+                        </View>
+                        <View style={[styles.detailRow, { marginTop: 8 }]}>
+                            <AlertTriangle size={16} color="#EF4444" />
+                            <Text style={styles.detailText}>
+                                <Text style={{ fontWeight: '700', color: '#EF4444' }}>{ride.problema_tipo || 'Pane'}:</Text> {ride.problema_descricao || 'Sem descrição adicional.'}
+                            </Text>
+                        </View>
+                    </View>
+                </View>
 
-                {ride.status === 'a_caminho' && (
-                    <TouchableOpacity
-                        style={styles.mainBtn}
-                        onPress={() => updateRideStatus('no_local')}
-                        disabled={statusUpdating}
-                    >
-                        {statusUpdating ? <ActivityIndicator color="#FFF" /> : (
-                            <>
-                                <MapPin size={20} color="#FFF" style={styles.btnIcon} />
-                                <Text style={styles.mainBtnText}>Cheguei no Local</Text>
-                            </>
-                        )}
-                    </TouchableOpacity>
-                )}
-
-                {ride.status === 'no_local' && (
-                    <TouchableOpacity
-                        style={[styles.mainBtn, { backgroundColor: '#F59E0B' }]}
-                        onPress={() => router.push(`/(motorista)/active-ride/checklist?id=${id}`)}
-                        disabled={statusUpdating}
-                    >
-                        {statusUpdating ? <ActivityIndicator color="#FFF" /> : (
-                            <>
-                                <Truck size={20} color="#FFF" style={styles.btnIcon} />
-                                <Text style={styles.mainBtnText}>Iniciar Reboque</Text>
-                            </>
-                        )}
-                    </TouchableOpacity>
-                )}
-
-                {ride.status === 'em_rota_destino' && (
-                    <View>
-                        {!isNearDestination && (
-                            <View style={styles.warningBox}>
-                                <AlertTriangle size={16} color="#B45309" />
-                                <Text style={styles.warningText}>
-                                    O botão de finalizar ficará disponível quando você chegar ao destino.
-                                </Text>
-                            </View>
-                        )}
+                {
+                    ride.status === 'aceita' && (
                         <TouchableOpacity
-                            style={[
-                                styles.mainBtn,
-                                { backgroundColor: '#16A34A' },
-                                !isNearDestination && { backgroundColor: '#D1FAE5', opacity: 0.6 }
-                            ]}
-                            onPress={() => {
-                                if (!isNearDestination) {
-                                    Alert.alert("Aviso", "Você precisa estar no local de destino para finalizar a corrida.");
-                                    return;
-                                }
-                                updateRideStatus('finalizada');
-                            }}
-                            disabled={statusUpdating || !isNearDestination}
+                            style={styles.mainBtn}
+                            onPress={() => updateRideStatus('a_caminho')}
+                            disabled={statusUpdating}
                         >
                             {statusUpdating ? <ActivityIndicator color="#FFF" /> : (
                                 <>
-                                    <CheckCircle size={20} color="#FFF" style={styles.btnIcon} />
-                                    <Text style={styles.mainBtnText}>Finalizar Corrida</Text>
+                                    <Truck size={20} color="#FFF" style={styles.btnIcon} />
+                                    <Text style={styles.mainBtnText}>Estou a Caminho</Text>
                                 </>
                             )}
                         </TouchableOpacity>
-                    </View>
-                )}
+                    )
+                }
 
-            </View>
+                {
+                    ride.status === 'a_caminho' && (
+                        <TouchableOpacity
+                            style={styles.mainBtn}
+                            onPress={() => updateRideStatus('no_local')}
+                            disabled={statusUpdating}
+                        >
+                            {statusUpdating ? <ActivityIndicator color="#FFF" /> : (
+                                <>
+                                    <MapPin size={20} color="#FFF" style={styles.btnIcon} />
+                                    <Text style={styles.mainBtnText}>Cheguei no Local</Text>
+                                </>
+                            )}
+                        </TouchableOpacity>
+                    )
+                }
+
+                {
+                    ride.status === 'no_local' && (
+                        <TouchableOpacity
+                            style={[styles.mainBtn, { backgroundColor: '#F59E0B' }]}
+                            onPress={() => router.push(`/(motorista)/active-ride/checklist?id=${id}`)}
+                            disabled={statusUpdating}
+                        >
+                            {statusUpdating ? <ActivityIndicator color="#FFF" /> : (
+                                <>
+                                    <Truck size={20} color="#FFF" style={styles.btnIcon} />
+                                    <Text style={styles.mainBtnText}>Iniciar Reboque</Text>
+                                </>
+                            )}
+                        </TouchableOpacity>
+                    )
+                }
+
+                {
+                    ride.status === 'em_rota_destino' && (
+                        <View>
+                            {!isNearDestination && (
+                                <View style={styles.warningBox}>
+                                    <AlertTriangle size={16} color="#B45309" />
+                                    <Text style={styles.warningText}>
+                                        O botão de finalizar ficará disponível quando você chegar ao destino.
+                                    </Text>
+                                </View>
+                            )}
+                            <TouchableOpacity
+                                style={[
+                                    styles.mainBtn,
+                                    { backgroundColor: '#16A34A' },
+                                    !isNearDestination && { backgroundColor: '#D1FAE5', opacity: 0.6 }
+                                ]}
+                                onPress={() => {
+                                    if (!isNearDestination) {
+                                        Alert.alert("Aviso", "Você precisa estar no local de destino para finalizar a corrida.");
+                                        return;
+                                    }
+                                    updateRideStatus('finalizada');
+                                }}
+                                disabled={statusUpdating || !isNearDestination}
+                            >
+                                {statusUpdating ? <ActivityIndicator color="#FFF" /> : (
+                                    <>
+                                        <CheckCircle size={20} color="#FFF" style={styles.btnIcon} />
+                                        <Text style={styles.mainBtnText}>Finalizar Corrida</Text>
+                                    </>
+                                )}
+                            </TouchableOpacity>
+                        </View>
+                    )
+                }
+
+            </View >
 
             {/* Chat Modal Layer */}
-            {showChat && typeof id === 'string' && (
-                <View style={[StyleSheet.absoluteFill, { zIndex: 9999, elevation: 9999, backgroundColor: '#FFF' }]}>
-                    <ChatModal
-                        corridaId={id}
-                        onClose={() => setShowChat(false)}
-                        isActive={!['finalizada', 'cancelada'].includes(ride.status)}
-                    />
-                </View>
-            )}
-        </View>
+            {
+                showChat && typeof id === 'string' && (
+                    <View style={[StyleSheet.absoluteFill, { zIndex: 9999, elevation: 9999, backgroundColor: '#FFF' }]}>
+                        <ChatModal
+                            corridaId={id}
+                            onClose={() => setShowChat(false)}
+                            isActive={!['finalizada', 'cancelada'].includes(ride.status)}
+                        />
+                    </View>
+                )
+            }
+        </View >
     );
 }
 
@@ -461,5 +508,53 @@ const styles = StyleSheet.create({
         fontSize: 13,
         color: '#92400E',
         lineHeight: 18,
+    },
+    detailsContainer: {
+        marginBottom: 24,
+    },
+    detailsTitle: {
+        fontSize: 10,
+        fontWeight: '900',
+        color: '#6B7280',
+        letterSpacing: 1,
+        marginBottom: 8,
+    },
+    detailCard: {
+        backgroundColor: '#F9FAFB',
+        borderRadius: 12,
+        padding: 12,
+        borderWidth: 1,
+        borderColor: '#F3F4F6',
+    },
+    detailRow: {
+        flexDirection: 'row',
+        alignItems: 'center',
+    },
+    detailText: {
+        marginLeft: 8,
+        fontSize: 14,
+        color: '#374151',
+        lineHeight: 18,
+    },
+    driverMarkerContainer: {
+        width: 48,
+        height: 48,
+        borderRadius: 24,
+        backgroundColor: '#000',
+        justifyContent: 'center',
+        alignItems: 'center',
+        borderWidth: 2,
+        borderColor: '#FFF',
+        elevation: 5,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.25,
+        shadowRadius: 3.84,
+        overflow: 'hidden',
+    },
+    markerImage: {
+        width: '100%',
+        height: '100%',
+        borderRadius: 22,
     },
 });

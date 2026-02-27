@@ -91,7 +91,7 @@ export default function ParaEmpresasPage() {
                             </span>
                         </div>
 
-                        <h1 className="text-[40px] md:text-[52px] font-poppins font-medium text-black leading-[1.1] tracking-tight max-w-4xl">
+                        <h1 className="text-[40px] md:text-[52px] font-bold text-black leading-[1.1] tracking-tight max-w-4xl">
                             Guinchos e Reboques para parceiros corporativos
                         </h1>
 
@@ -125,7 +125,7 @@ export default function ParaEmpresasPage() {
                             <span className="text-amber-500 font-bold uppercase text-xs tracking-widest">
                                 Para quais empresas nossa parceria gera valor real?
                             </span>
-                            <h2 className="text-[28px] md:text-[36px] font-poppins font-medium text-white max-w-4xl mx-auto leading-tight">
+                            <h2 className="text-[28px] md:text-[36px] font-bold text-white max-w-4xl mx-auto leading-tight">
                                 Se seus clientes dependem de mobilidade ou seu negócio está conectado ao setor automotivo, temos a solução ideal para agregar valor aos seus serviços.
                             </h2>
                         </div>
@@ -155,7 +155,7 @@ export default function ParaEmpresasPage() {
                             <div className="flex items-center gap-3">
                                 <img src="/tow-truck-icon.png" className="w-[84px] h-auto object-contain" alt="Logo" />
                             </div>
-                            <h2 className="text-[36px] md:text-[42px] font-poppins font-medium text-black leading-tight tracking-tight">
+                            <h2 className="text-[36px] md:text-[42px] font-bold text-black leading-tight tracking-tight">
                                 Brasil inteiro, um só <br /> padrão de atendimento
                             </h2>
                             <p className="text-[16px] font-medium text-zinc-600 leading-relaxed max-w-lg">
@@ -194,7 +194,7 @@ export default function ParaEmpresasPage() {
                 {/* FAQ SECTION */}
                 <section id="faq" className="py-24 px-6 md:px-12 bg-[#FBFBFB]">
                     <div className="max-w-3xl mx-auto">
-                        <h2 className="text-[32px] md:text-[36px] font-poppins font-medium text-black text-center mb-16 tracking-tight">
+                        <h2 className="text-[32px] md:text-[36px] font-bold text-black text-center mb-16 tracking-tight">
                             Perguntas Comuns Respondidas
                         </h2>
                         <div className="border-t border-zinc-200">

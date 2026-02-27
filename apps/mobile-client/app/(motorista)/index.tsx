@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { StyleSheet, View, Text, ActivityIndicator, Dimensions, TouchableOpacity, Alert, LayoutAnimation, Platform, UIManager } from 'react-native';
+import { StyleSheet, View, Text, ActivityIndicator, Dimensions, TouchableOpacity, Alert, LayoutAnimation, Platform, UIManager, Image as RNImage } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import MapView, { Marker, PROVIDER_DEFAULT } from 'react-native-maps';
 import { useRouter } from 'expo-router';
@@ -177,6 +177,8 @@ export default function MotoristaHomeScreen() {
                 (payload) => {
                     if (payload.new.status === 'buscando_motorista') {
                         setIncomingRide(payload.new);
+                        playNotificationSound();
+                        sendLocalNotification(payload.new);
                     } else if (payload.new.status === 'rejeitada' || payload.new.status === 'cancelada') {
                         // Clear the modal if it was rejected or cancelled
                         setIncomingRide(null);
@@ -304,9 +306,14 @@ export default function MotoristaHomeScreen() {
                             longitude: location.coords.longitude
                         }}
                         title="Seu Guincho"
+                        anchor={{ x: 0.5, y: 0.5 }}
                     >
                         <View style={[styles.markerContainer, isOnline ? styles.markerOnline : styles.markerOffline]}>
-                            <Truck size={24} color="#FFF" />
+                            <RNImage
+                                source={require('../../assets/images/marker-guincho.png')}
+                                style={styles.markerImage}
+                                resizeMode="cover"
+                            />
                         </View>
                     </Marker>
                 )}
@@ -408,21 +415,8 @@ const styles = StyleSheet.create({
         textAlign: 'center',
         paddingHorizontal: 24,
     },
-    markerContainer: {
-        width: 48,
-        height: 48,
-        borderRadius: 24,
-        justifyContent: 'center',
-        alignItems: 'center',
-        borderWidth: 3,
-        borderColor: '#FFF',
-        elevation: 5,
-    },
-    markerOnline: {
-        backgroundColor: '#111', // Green
-    },
-    markerOffline: {
-        backgroundColor: '#6B7280', // Gray
+    topStatusPillOffline: {
+        backgroundColor: '#F3F4F6',
     },
     topStatusPill: {
         position: 'absolute',
@@ -559,5 +553,33 @@ const styles = StyleSheet.create({
         color: '#EF4444',
         fontWeight: 'bold',
         fontSize: 13,
+    },
+    markerContainer: {
+        width: 48,
+        height: 48,
+        borderRadius: 24,
+        padding: 4,
+        justifyContent: 'center',
+        alignItems: 'center',
+        borderWidth: 2,
+        borderColor: '#FFF',
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.3,
+        shadowRadius: 4,
+        elevation: 5,
+        backgroundColor: '#000',
+        overflow: 'hidden',
+    },
+    markerImage: {
+        width: '100%',
+        height: '100%',
+        borderRadius: 20,
+    },
+    markerOnline: {
+        borderColor: '#10B981',
+    },
+    markerOffline: {
+        borderColor: '#6B7280',
     },
 });

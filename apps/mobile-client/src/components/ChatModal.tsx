@@ -3,6 +3,7 @@ import {
     View, Text, StyleSheet, TextInput, TouchableOpacity,
     FlatList, KeyboardAvoidingView, Platform, ActivityIndicator
 } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { X, Send } from 'lucide-react-native';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
@@ -22,6 +23,7 @@ interface ChatModalProps {
 }
 
 export default function ChatModal({ corridaId, onClose, isActive }: ChatModalProps) {
+    const insets = useSafeAreaInsets();
     const { session } = useAuth();
     const [messages, setMessages] = useState<Message[]>([]);
     const [inputText, setInputText] = useState('');
@@ -126,7 +128,10 @@ export default function ChatModal({ corridaId, onClose, isActive }: ChatModalPro
             style={styles.container}
             behavior={Platform.OS === 'ios' ? 'padding' : undefined}
         >
-            <View style={styles.header}>
+            <View style={[
+                styles.header,
+                { paddingTop: Math.max(insets.top, 16) }
+            ]}>
                 <Text style={styles.headerTitle}>Mensagens</Text>
                 <TouchableOpacity onPress={onClose} style={styles.closeBtn}>
                     <X size={24} color="#111827" />
@@ -154,7 +159,10 @@ export default function ChatModal({ corridaId, onClose, isActive }: ChatModalPro
                 />
             )}
 
-            <View style={styles.inputContainer}>
+            <View style={[
+                styles.inputContainer,
+                { paddingBottom: Math.max(insets.bottom, 12) }
+            ]}>
                 {isActive ? (
                     <>
                         <TextInput
@@ -194,7 +202,7 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         justifyContent: 'space-between',
         paddingHorizontal: 20,
-        paddingVertical: 16,
+        paddingBottom: 16,
         backgroundColor: '#FFFFFF',
         borderBottomWidth: 1,
         borderBottomColor: '#F3F4F6',
@@ -273,11 +281,10 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         alignItems: 'flex-end',
         paddingHorizontal: 16,
-        paddingVertical: 12,
+        paddingTop: 12,
         backgroundColor: '#FFFFFF',
         borderTopWidth: 1,
         borderTopColor: '#F3F4F6',
-        paddingBottom: Platform.OS === 'ios' ? 32 : 12,
     },
     input: {
         flex: 1,

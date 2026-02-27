@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { StyleSheet, View, Text, ActivityIndicator, Dimensions, TouchableOpacity, Alert, Image, Linking } from 'react-native';
+import { StyleSheet, View, Text, ActivityIndicator, Dimensions, TouchableOpacity, Alert, Image as RNImage, Linking } from 'react-native';
 import MapView, { Marker, PROVIDER_DEFAULT } from 'react-native-maps';
 import MapViewDirections from 'react-native-maps-directions';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
@@ -300,6 +300,28 @@ export default function HomeScreen() {
                     </Marker>
                 )}
 
+                {/* Driver Marker - Only when active */}
+                {rideState === 'active' && driverInfo?.id && location && (
+                    <Marker
+                        coordinate={{
+                            // In a real app, this would come from a real-time location stream
+                            // For now, we use the driver's initial accepted position or a mock
+                            latitude: location.coords.latitude + 0.002,
+                            longitude: location.coords.longitude + 0.002
+                        }}
+                        title="Motorista a caminho"
+                        anchor={{ x: 0.5, y: 0.5 }}
+                    >
+                        <View style={styles.driverMarkerContainer}>
+                            <RNImage
+                                source={require('../../assets/images/marker-guincho.png')}
+                                style={styles.markerImage}
+                                resizeMode="cover"
+                            />
+                        </View>
+                    </Marker>
+                )}
+
                 {destLat && destLng && (
                     <Marker
                         coordinate={{ latitude: destLat, longitude: destLng }}
@@ -387,11 +409,11 @@ export default function HomeScreen() {
 
                         <View style={styles.driverCardContent}>
                             <View style={styles.driverIdentityRow}>
-                                {(driverInfo.foto_url || driverInfo.avatar_url) ? (
-                                    <Image source={{ uri: driverInfo.foto_url || driverInfo.avatar_url }} style={styles.driverAvatar} />
+                                {(driverInfo.foto_url && driverInfo.foto_url.trim() !== '') || (driverInfo.avatar_url && driverInfo.avatar_url.trim() !== '') ? (
+                                    <RNImage source={{ uri: driverInfo.foto_url || driverInfo.avatar_url }} style={styles.driverAvatar} />
                                 ) : (
-                                    <View style={[styles.driverAvatar, { backgroundColor: '#E5E7EB', justifyContent: 'center', alignItems: 'center' }]}>
-                                        <User size={32} color="#9CA3AF" />
+                                    <View style={[styles.driverAvatar, { backgroundColor: '#D1D5DB', justifyContent: 'center', alignItems: 'center' }]}>
+                                        <User size={32} color="#4B5563" />
                                     </View>
                                 )}
                                 <View style={styles.driverMainInfo}>
@@ -793,5 +815,26 @@ const styles = StyleSheet.create({
         backgroundColor: 'rgba(59, 130, 246, 0.2)',
         borderWidth: 1,
         borderColor: 'rgba(59, 130, 246, 0.5)',
-    }
+    },
+    driverMarkerContainer: {
+        width: 48,
+        height: 48,
+        borderRadius: 24,
+        backgroundColor: '#000',
+        justifyContent: 'center',
+        alignItems: 'center',
+        borderWidth: 2,
+        borderColor: '#FFF',
+        elevation: 5,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.25,
+        shadowRadius: 3.84,
+        overflow: 'hidden',
+    },
+    markerImage: {
+        width: '100%',
+        height: '100%',
+        borderRadius: 22,
+    },
 });

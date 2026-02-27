@@ -99,7 +99,7 @@ export default function LoginPage() {
                         </Link>
                     </div>
 
-                    <h2 className="text-[38px] font-poppins font-medium mb-8 leading-[1.1] tracking-tight text-white">
+                    <h2 className="text-[38px] font-bold mb-8 leading-[1.1] tracking-tight text-white">
                         A ajuda que você precisa, <span className="font-bold text-amber-500 text-nowrap">exatamente quando precisa.</span>
                     </h2>
 
@@ -109,11 +109,11 @@ export default function LoginPage() {
 
                     <div className="grid grid-cols-2 gap-12 pt-8 border-t border-white/10">
                         <div className="space-y-1">
-                            <p className="text-3xl font-poppins font-bold text-white tracking-tight">Socorro</p>
+                            <p className="text-3xl font-bold text-white tracking-tight">Socorro</p>
                             <p className="text-[11px] text-white/40 font-black uppercase tracking-[0.2em]">em minutos</p>
                         </div>
                         <div className="space-y-1">
-                            <p className="text-3xl font-poppins font-bold text-white tracking-tight">Suporte</p>
+                            <p className="text-3xl font-bold text-white tracking-tight">Suporte</p>
                             <p className="text-[11px] text-white/40 font-black uppercase tracking-[0.2em]">Sempre Disponível 24h</p>
                         </div>
                     </div>
@@ -125,9 +125,9 @@ export default function LoginPage() {
                 <div className="max-w-[400px] w-full space-y-10">
                     <div className="space-y-3">
                         <div className="lg:hidden flex items-center mb-8">
-                            <img src="/logo-oficial.png.png" alt="Guinchos e Reboques" className="w-[160px] h-auto object-contain invert" />
+                            <img src="/logo-oficial.png.png" alt="Guinchos e Reboques" className="w-[160px] h-auto object-contain" />
                         </div>
-                        <h3 className="text-[32px] font-poppins font-bold tracking-tight text-black leading-tight">Bem-vindo de volta</h3>
+                        <h3 className="text-[32px] font-bold tracking-tight text-black leading-tight">Bem-vindo de volta</h3>
                         <p className="text-[15px] text-zinc-500 font-medium">Acesse sua conta para continuar.</p>
                     </div>
 
