@@ -16,7 +16,6 @@ export default function LandingPage() {
     });
 
     // Parallax effect settings: circle moves down faster, image moves down slower
-    const circleY = useTransform(scrollYProgress, [0, 1], [0, 150]);
     const imageY = useTransform(scrollYProgress, [0, 1], [0, 50]);
 
     const faqs = [
@@ -94,11 +93,6 @@ export default function LandingPage() {
                         </div>
 
                         <div className="relative w-full aspect-square lg:aspect-auto lg:h-[600px] flex items-center justify-center lg:justify-end mt-8 lg:mt-0">
-                            {/* The Yellow Circle */}
-                            <motion.div
-                                style={{ y: circleY, x: '-50%' }}
-                                className="absolute top-1/2 left-1/2 -translate-y-1/2 w-[350px] h-[350px] md:w-[480px] md:h-[480px] bg-amber-400 rounded-full z-0"
-                            ></motion.div>
 
                             {/* The Phones Container with Parallax and nested Float */}
                             <motion.div
