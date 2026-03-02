@@ -82,7 +82,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                 setIsLoading(false);
                 const isPublicRoute =
                     pathname === '/' ||
-                    pathname === '/dashboard' ||
                     pathname === '/login' ||
                     pathname === '/cadastro' ||
                     pathname === '/cadastro-motorista' ||
