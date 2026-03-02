@@ -43,8 +43,8 @@ export default function LandingPage() {
 
             <main>
                 {/* HERO SECTION */}
-                <section ref={heroRef} className="relative py-16 px-6 md:px-12 bg-white flex flex-col items-center overflow-hidden">
-                    <div className="max-w-[75rem] mx-auto w-full grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-16 items-center">
+                <section ref={heroRef} className="relative py-12 px-6 md:px-12 bg-white flex flex-col items-center overflow-hidden">
+                    <div className="max-w-[75rem] mx-auto w-full grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12 items-center">
                         <div className="space-y-6 relative z-10 w-full max-w-[500px] mx-auto lg:mx-0">
                             {/* Top Badge */}
                             <div className="inline-flex items-center rounded-full border border-gray-200 bg-white p-1 mb-2 shadow-sm w-fit">
@@ -92,7 +92,7 @@ export default function LandingPage() {
                             </div>
                         </div>
 
-                        <div className="relative w-full aspect-square lg:aspect-auto lg:h-[600px] flex items-center justify-center lg:justify-end mt-8 lg:mt-0">
+                        <div className="relative w-full flex items-center justify-center lg:justify-end mt-4 lg:mt-0">
 
                             {/* The Phones Container with Parallax and nested Float */}
                             <motion.div
