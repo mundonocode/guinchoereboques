@@ -43,7 +43,7 @@ export default function LandingPage() {
 
             <main>
                 {/* HERO SECTION */}
-                <section ref={heroRef} className="relative pt-24 pb-32 px-6 md:px-12 bg-white flex flex-col items-center overflow-hidden">
+                <section ref={heroRef} className="relative py-16 px-6 md:px-12 bg-white flex flex-col items-center overflow-hidden">
                     <div className="max-w-[75rem] mx-auto w-full grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-16 items-center">
                         <div className="space-y-6 relative z-10 w-full max-w-[500px] mx-auto lg:mx-0">
                             {/* Top Badge */}
