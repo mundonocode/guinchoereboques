@@ -68,14 +68,14 @@ export async function updateSession(request: NextRequest) {
         const pathname = request.nextUrl.pathname
 
         // Se é um cliente tentando acessar /motorista, manda de volta pro /cliente
-        if (pathname.startsWith('/motorista') && role !== 'motorista') {
+        if (pathname.startsWith('/motorista') && role !== 'motorista' && role !== 'admin') {
             const url = request.nextUrl.clone()
             url.pathname = role === 'cliente' ? '/cliente' : '/'
             return NextResponse.redirect(url)
         }
 
         // Se é um motorista tentando acessar /cliente, manda de volta pro /motorista
-        if (pathname.startsWith('/cliente') && role !== 'cliente') {
+        if (pathname.startsWith('/cliente') && role !== 'cliente' && role !== 'admin') {
             const url = request.nextUrl.clone()
             url.pathname = role === 'motorista' ? '/motorista' : '/'
             return NextResponse.redirect(url)

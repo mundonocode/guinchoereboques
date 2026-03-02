@@ -21,7 +21,7 @@ function cn(...inputs: ClassValue[]) {
 }
 
 const navItems = [
-    { name: 'Dashboard', href: '/', icon: LayoutGrid },
+    { name: 'Dashboard', href: '/dashboard', icon: LayoutGrid },
     { name: 'Motoristas', href: '/motoristas', icon: Truck },
     { name: 'Clientes', href: '/clientes', icon: Users },
     { name: 'Financeiro', href: '/financeiro', icon: LineChart },
