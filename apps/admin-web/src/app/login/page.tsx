@@ -27,7 +27,7 @@ export default function LoginPage() {
     const handleRedirect = (role: string) => {
         switch (role) {
             case 'admin':
-                router.push('/');
+                router.push('/dashboard');
                 break;
             case 'motorista':
                 router.push('/motorista');
