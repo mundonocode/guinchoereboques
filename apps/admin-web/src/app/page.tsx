@@ -106,7 +106,7 @@ export default function LandingPage() {
                                 className="relative z-10 w-full max-w-[420px] flex justify-center"
                             >
                                 <motion.img
-                                    src="/phones-app.png"
+                                    src="/hero-phones-new.png"
                                     alt="Celular com app de guinchos"
                                     animate={{ y: [0, -18, 0] }}
                                     transition={{ duration: 5, repeat: Infinity, ease: "easeInOut" }}
