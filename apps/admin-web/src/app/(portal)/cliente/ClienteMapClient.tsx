@@ -98,7 +98,7 @@ export function ClienteMapClient() {
             componentRestrictions: { country: 'br' }
         });
 
-        autocomplete.addListener('place_changed', () => {
+        const listener = autocomplete.addListener('place_changed', () => {
             const place = autocomplete.getPlace();
             if (place.geometry && place.geometry.location) {
                 const newDest = {
@@ -107,19 +107,25 @@ export function ClienteMapClient() {
                 };
                 setDestination(newDest);
                 setDestAddressName(place.name || place.formatted_address || '');
-
-                // Adjust map viewport to show both origin and destination if origin exists
-                if (location && map) {
-                    const bounds = new google.maps.LatLngBounds();
-                    bounds.extend(location);
-                    bounds.extend(newDest);
-                    map.fitBounds(bounds, { top: 100, bottom: 100, left: 100, right: 100 });
-                }
             } else {
                 alert("Por favor, selecione um endereço válido na lista.");
             }
         });
-    }, [placesLib, location, map, rideState]);
+
+        return () => {
+            if (listener) listener.remove();
+        };
+    }, [placesLib]);
+
+    // Adjust map viewport when origin or destination changes
+    useEffect(() => {
+        if (location && destination && map) {
+            const bounds = new google.maps.LatLngBounds();
+            bounds.extend(location);
+            bounds.extend(destination);
+            map.fitBounds(bounds, { top: 100, bottom: 100, left: 100, right: 100 });
+        }
+    }, [location, destination, map]);
 
     // GeoLocation
     useEffect(() => {
