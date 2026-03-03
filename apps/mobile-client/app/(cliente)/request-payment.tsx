@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, SafeAreaView, ActivityIndicator, Alert, Platform, TextInput, ScrollView, KeyboardAvoidingView } from 'react-native';
 import { useRouter } from 'expo-router';
 import { ArrowLeft, CreditCard, Banknote } from 'lucide-react-native';
@@ -11,7 +11,7 @@ import PixModal from '../../src/components/PixModal';
 export default function RequestPaymentScreen() {
     const router = useRouter();
     const { session } = useAuth();
-    const { requestDetails, setCurrentRideId, resetRequestDetails } = useRequestStore();
+    const { requestDetails, currentRideId, setCurrentRideId, resetRequestDetails } = useRequestStore();
 
     const [paymentMethod, setPaymentMethod] = useState<'credit_card' | 'pix'>('pix');
     const [isSubmitting, setIsSubmitting] = useState(false);
@@ -24,6 +24,70 @@ export default function RequestPaymentScreen() {
 
     const [pixData, setPixData] = useState<any>(null);
     const [isPixModalVisible, setIsPixModalVisible] = useState(false);
+    const [isVerifyingPayment, setIsVerifyingPayment] = useState(false);
+
+    // Escuta mudanças na tabela corridas via Realtime
+    useEffect(() => {
+        if (!isPixModalVisible || !currentRideId) return;
+
+        console.log('Cliente subscribing to payment updates:', currentRideId);
+
+        const subscription = supabase
+            .channel(`payment_wait_${currentRideId}`)
+            .on(
+                'postgres_changes',
+                {
+                    event: 'UPDATE',
+                    schema: 'public',
+                    table: 'corridas',
+                    filter: `id=eq.${currentRideId}`
+                },
+                (payload) => {
+                    console.log('Payment update received via Realtime:', payload.new);
+                    if (payload.new.status === 'buscando_motorista') {
+                        setIsPixModalVisible(false);
+                        router.replace('/(cliente)?searching=true');
+                    }
+                }
+            )
+            .subscribe();
+
+        return () => {
+            supabase.removeChannel(subscription);
+        };
+    }, [isPixModalVisible, currentRideId]);
+
+    const handleVerifyPayment = async () => {
+        if (!currentRideId) return;
+        setIsVerifyingPayment(true);
+        try {
+            console.log('Manual verify for ride:', currentRideId);
+            const { data, error } = await supabase.functions.invoke('asaas-check-payment', {
+                body: { rideId: currentRideId }
+            });
+
+            if (error) {
+                console.error("Error from edge function:", error);
+                Alert.alert("Aviso", "Não foi possível verificar o pagamento neste momento.");
+                return;
+            }
+
+            if (data?.ride_status === 'buscando_motorista') {
+                setIsPixModalVisible(false);
+                router.replace('/(cliente)?searching=true');
+            } else {
+                Alert.alert(
+                    "Pagamento Pendente",
+                    "O Asaas ainda não confirmou o recebimento deste Pix.\nPode levar alguns segundos. Aguarde ou feche para continuar."
+                );
+            }
+        } catch (err: any) {
+            console.error("Verification error:", err);
+            Alert.alert("Aviso", "Erro ao comunicar com o servidor de pagamento.");
+        } finally {
+            setIsVerifyingPayment(false);
+        }
+    };
 
     // Valores simulados para exibição, já que estamos implementando a navegação
     // Em um fluxo real, preencheríamos a store na index.tsx
@@ -256,6 +320,8 @@ export default function RequestPaymentScreen() {
             <PixModal
                 visible={isPixModalVisible}
                 pixData={pixData}
+                onVerify={handleVerifyPayment}
+                isVerifying={isVerifyingPayment}
                 onClose={() => {
                     setIsPixModalVisible(false);
                     router.replace('/(cliente)?searching=true');

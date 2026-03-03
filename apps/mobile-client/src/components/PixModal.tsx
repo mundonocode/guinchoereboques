@@ -10,9 +10,11 @@ interface PixModalProps {
         payload: string;
         expirationDate: string;
     } | null;
+    onVerify?: () => Promise<void>;
+    isVerifying?: boolean;
 }
 
-export default function PixModal({ visible, onClose, pixData }: PixModalProps) {
+export default function PixModal({ visible, onClose, onVerify, isVerifying, pixData }: PixModalProps) {
     const [copied, setCopied] = useState(false);
 
     const handleCopy = () => {
@@ -84,8 +86,16 @@ export default function PixModal({ visible, onClose, pixData }: PixModalProps) {
                             </View>
                         </View>
 
-                        <TouchableOpacity style={styles.confirmButton} onPress={onClose}>
-                            <Text style={styles.confirmButtonText}>Já paguei / Entendi</Text>
+                        <TouchableOpacity
+                            style={[styles.confirmButton, isVerifying && { opacity: 0.7 }]}
+                            onPress={onVerify || onClose}
+                            disabled={isVerifying}
+                        >
+                            {isVerifying ? (
+                                <ActivityIndicator color="#fff" />
+                            ) : (
+                                <Text style={styles.confirmButtonText}>Já paguei o Pix</Text>
+                            )}
                         </TouchableOpacity>
                     </View>
                 </View>
