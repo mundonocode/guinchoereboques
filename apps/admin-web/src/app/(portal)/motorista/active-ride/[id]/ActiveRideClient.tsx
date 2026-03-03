@@ -3,10 +3,11 @@
 import React, { useState, useEffect } from 'react';
 import { Map, AdvancedMarker, useMap, useMapsLibrary } from '@vis.gl/react-google-maps';
 import { useRouter } from 'next/navigation';
-import { Phone, Navigation, ArrowLeft, User, Truck, CheckCircle, MessageSquare } from 'lucide-react';
+import { Phone, Navigation, ArrowLeft, User, Truck, CheckCircle, MessageSquare, Camera } from 'lucide-react';
 import { createClient } from '@/utils/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { ChatModal } from '@/components/ChatModal';
+import SignatureCanvas from 'react-signature-canvas';
 
 interface ActiveRideClientProps {
     rideId: string;
@@ -29,6 +30,18 @@ export function ActiveRideClient({ rideId }: ActiveRideClientProps) {
     const [clientProfile, setClientProfile] = useState<any>(null);
     const [loading, setLoading] = useState(true);
     const [isChatOpen, setIsChatOpen] = useState(false);
+
+    // Checklist State
+    const [isSubmittingChecklist, setIsSubmittingChecklist] = useState(false);
+    const [avarias, setAvarias] = useState('');
+    const [fotos, setFotos] = useState({
+        frente: null as string | null,
+        traseira: null as string | null,
+        lateralEsq: null as string | null,
+        lateralDir: null as string | null,
+    });
+    const [signatureData, setSignatureData] = useState<string | null>(null);
+    const signatureRef = React.useRef<any>(null);
 
     // Instances
     useEffect(() => {
@@ -175,6 +188,102 @@ export function ActiveRideClient({ rideId }: ActiveRideClientProps) {
         if (error) {
             alert('Erro ao atualizar status.');
             console.error(error);
+        } else {
+            // Let realtime handle the state update
+        }
+    };
+
+    const uploadBase64Image = async (base64String: string, path: string) => {
+        const base64Data = base64String.replace(/^data:image\/\w+;base64,/, '');
+
+        // Convert base64 to Blob for web
+        const byteCharacters = atob(base64Data);
+        const byteArrays = [];
+        for (let offset = 0; offset < byteCharacters.length; offset += 512) {
+            const slice = byteCharacters.slice(offset, offset + 512);
+            const byteNumbers = new Array(slice.length);
+            for (let i = 0; i < slice.length; i++) {
+                byteNumbers[i] = slice.charCodeAt(i);
+            }
+            const byteArray = new Uint8Array(byteNumbers);
+            byteArrays.push(byteArray);
+        }
+        const blob = new Blob(byteArrays, { type: 'image/jpeg' });
+
+        const { data, error } = await supabase.storage
+            .from('corridas')
+            .upload(path, blob, {
+                contentType: 'image/jpeg',
+                upsert: true,
+            });
+
+        if (error) {
+            console.error('Upload error:', error);
+            throw new Error(`Erro ao subir imagem: ${path}`);
+        }
+
+        const { data: publicData } = supabase.storage.from('corridas').getPublicUrl(path);
+        return publicData.publicUrl;
+    };
+
+    const handlePhotoChange = (e: React.ChangeEvent<HTMLInputElement>, position: keyof typeof fotos) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+
+        const reader = new FileReader();
+        reader.onloadend = () => {
+            setFotos(prev => ({ ...prev, [position]: reader.result as string }));
+        };
+        reader.readAsDataURL(file);
+    };
+
+    const handleFinalizeChecklist = async () => {
+        if (!fotos.frente || !fotos.traseira || !fotos.lateralEsq || !fotos.lateralDir) {
+            alert('Tire as 4 fotos do veículo antes de prosseguir.');
+            return;
+        }
+
+        let sigData = signatureData;
+        if (signatureRef.current && !signatureRef.current.isEmpty()) {
+            sigData = signatureRef.current.toDataURL();
+            setSignatureData(sigData);
+        }
+
+        if (!sigData) {
+            alert('A assinatura do cliente é obrigatória.');
+            return;
+        }
+
+        setIsSubmittingChecklist(true);
+        try {
+            const [urlFrente, urlTraseira, urlEsq, urlDir, urlAssinatura] = await Promise.all([
+                uploadBase64Image(fotos.frente, `${rideId}/checklist_frente.jpg`),
+                uploadBase64Image(fotos.traseira, `${rideId}/checklist_traseira.jpg`),
+                uploadBase64Image(fotos.lateralEsq, `${rideId}/checklist_esq.jpg`),
+                uploadBase64Image(fotos.lateralDir, `${rideId}/checklist_dir.jpg`),
+                uploadBase64Image(sigData, `${rideId}/assinatura_embarque.jpg`),
+            ]);
+
+            const { error: updateError } = await supabase
+                .from('corridas')
+                .update({
+                    status: 'em_rota_destino',
+                    foto_veiculo_frente_url: urlFrente,
+                    foto_veiculo_traseira_url: urlTraseira,
+                    foto_veiculo_lateral_esq_url: urlEsq,
+                    foto_veiculo_lateral_dir_url: urlDir,
+                    avarias_pre_existentes: avarias,
+                    assinatura_cliente_url: urlAssinatura
+                })
+                .eq('id', rideId);
+
+            if (updateError) throw updateError;
+            alert('Checklist finalizado! Rota para o destino iniciada.');
+        } catch (error) {
+            console.error(error);
+            alert('Ocorreu um erro ao salvar o checklist. Tente novamente.');
+        } finally {
+            setIsSubmittingChecklist(false);
         }
     };
 
@@ -186,8 +295,13 @@ export function ActiveRideClient({ rideId }: ActiveRideClientProps) {
                 updateStatus('no_local');
                 break;
             case 'no_local':
-                updateStatus('em_andamento');
+                // Instead of moving straight to em_andamento, we show the checklist form.
+                // Mobile app sets 'em_rota_destino' right after the checklist. 
+                // Currently, web had 'em_andamento'. Let's adapt web to use the checklist state manually or just let the button trigger it.
+                // Since `ride.status` is 'no_local', the UI will show the checklist. The button handles the transition.
+                alert("Por favor, preencha o checklist para prosseguir.");
                 break;
+            case 'em_rota_destino':
             case 'em_andamento':
                 updateStatus('finalizada');
                 alert('Corrida Finalizada com sucesso!');
@@ -327,30 +441,99 @@ export function ActiveRideClient({ rideId }: ActiveRideClientProps) {
                         </div>
                     </div>
 
-                    {/* Actions Footer */}
-                    <div className="flex gap-3 mt-2">
-                        <button
-                            onClick={handleActionClick}
-                            className="flex-[3] bg-zinc-900 text-white font-black text-[18px] py-5 rounded-[24px] flex items-center justify-center gap-3 shadow-2xl active:scale-[0.98] transform-gpu transition-all"
-                        >
-                            {(ride.status === 'aceita' || ride.status === 'a_caminho') && (
-                                <>Cheguei ao Local</>
-                            )}
-                            {ride.status === 'no_local' && (
-                                <>Iniciar Reboque</>
-                            )}
-                            {ride.status === 'em_andamento' && (
-                                <><CheckCircle size={22} /> Finalizar Corrida</>
-                            )}
-                        </button>
+                    {/* View based on Ride Status */}
+                    {ride.status === 'no_local' ? (
+                        <div className="flex flex-col gap-4 mt-2 max-h-[50vh] overflow-y-auto no-scrollbar pb-4 pr-1">
+                            <h3 className="text-lg font-black text-zinc-900 mb-2">Checklist de Embarque</h3>
 
-                        <button
-                            onClick={handleCancel}
-                            className="flex-1 bg-white border border-red-100 text-red-500 font-black rounded-[24px] flex justify-center items-center text-[15px] hover:bg-red-50 active:scale-[0.98] transition-all"
-                        >
-                            Cancelar
-                        </button>
-                    </div>
+                            <div className="grid grid-cols-2 gap-3">
+                                {[
+                                    { key: 'frente', label: 'FRENTE' },
+                                    { key: 'traseira', label: 'TRASEIRA' },
+                                    { key: 'lateralEsq', label: 'LADO ESQ' },
+                                    { key: 'lateralDir', label: 'LADO DIR' }
+                                ].map((photo) => (
+                                    <label key={photo.key} className="relative flex flex-col items-center justify-center aspect-square bg-zinc-50 rounded-2xl border-2 border-dashed border-zinc-200 cursor-pointer hover:bg-zinc-100 overflow-hidden">
+                                        <input
+                                            type="file"
+                                            accept="image/*"
+                                            capture="environment"
+                                            className="hidden"
+                                            onChange={(e) => handlePhotoChange(e, photo.key as keyof typeof fotos)}
+                                        />
+                                        {fotos[photo.key as keyof typeof fotos] ? (
+                                            <img src={fotos[photo.key as keyof typeof fotos]!} alt={photo.label} className="w-full h-full object-cover" />
+                                        ) : (
+                                            <>
+                                                <Camera className="text-zinc-400 mb-2" size={24} />
+                                                <span className="text-[10px] font-black text-zinc-400 tracking-wider">{photo.label}</span>
+                                            </>
+                                        )}
+                                    </label>
+                                ))}
+                            </div>
+
+                            <div className="flex flex-col gap-2 mt-2">
+                                <label className="text-[10px] font-black text-zinc-400 uppercase tracking-[0.15em]">Avarias Pré-Existentes</label>
+                                <textarea
+                                    className="w-full bg-zinc-50 rounded-2xl border border-zinc-200 p-4 text-sm text-zinc-900 outline-none focus:ring-2 focus:ring-zinc-900 transition-all min-h-[100px] resize-none"
+                                    placeholder="Descreva riscos, amassados ou problemas..."
+                                    value={avarias}
+                                    onChange={(e) => setAvarias(e.target.value)}
+                                ></textarea>
+                            </div>
+
+                            <div className="flex flex-col gap-2 mt-2">
+                                <label className="text-[10px] font-black text-zinc-400 uppercase tracking-[0.15em]">Assinatura do Cliente</label>
+                                <div className="border border-zinc-200 rounded-2xl overflow-hidden bg-zinc-50 h-[150px] relative">
+                                    <SignatureCanvas
+                                        ref={signatureRef}
+                                        penColor="black"
+                                        canvasProps={{ className: "w-full h-full" }}
+                                    />
+                                    <button
+                                        className="absolute bottom-2 right-2 text-xs bg-white text-zinc-500 px-3 py-1 rounded-full shadow-sm border border-zinc-200"
+                                        onClick={() => signatureRef.current?.clear()}
+                                    >
+                                        Limpar
+                                    </button>
+                                </div>
+                            </div>
+
+                            <button
+                                onClick={handleFinalizeChecklist}
+                                disabled={isSubmittingChecklist}
+                                className="w-full mt-4 bg-emerald-500 text-white font-black text-[16px] py-4 rounded-2xl flex items-center justify-center gap-2 shadow-lg hover:bg-emerald-600 disabled:opacity-50 transition-all"
+                            >
+                                {isSubmittingChecklist ? (
+                                    <div className="animate-spin w-5 h-5 border-[2px] border-white border-t-transparent rounded-full" />
+                                ) : (
+                                    <>
+                                        <CheckCircle size={20} />
+                                        <span>Finalizar e Iniciar Rota</span>
+                                    </>
+                                )}
+                            </button>
+                        </div>
+                    ) : (
+                        <div className="flex gap-3 mt-2">
+                            <button
+                                onClick={handleActionClick}
+                                className="flex-[3] bg-zinc-900 text-white font-black text-[18px] py-5 rounded-[24px] flex items-center justify-center gap-3 shadow-2xl active:scale-[0.98] transform-gpu transition-all"
+                            >
+                                {ride.status === 'aceita' && 'Estou a Caminho'}
+                                {ride.status === 'a_caminho' && 'Cheguei no Local'}
+                                {(ride.status === 'em_andamento' || ride.status === 'em_rota_destino') && 'Finalizar Reboque'}
+                            </button>
+                            <button
+                                onClick={handleCancel}
+                                className="flex flex-[1] bg-rose-50 text-rose-500 font-bold text-[13px] py-5 rounded-[24px] items-center justify-center overflow-hidden hover:bg-rose-100 transition-colors"
+                            >
+                                <span className="opacity-0 w-0 h-0 block">Cancelar</span>
+                                <span className="uppercase tracking-widest text-[11px] font-black">X</span>
+                            </button>
+                        </div>
+                    )}
                 </div>
             </div>
 
