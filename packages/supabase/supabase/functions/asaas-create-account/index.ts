@@ -15,12 +15,13 @@ serve(async (req: Request) => {
     }
 
     try {
+        const authHeader = req.headers.get("Authorization");
         const supabaseClient = createClient(
             Deno.env.get("SUPABASE_URL") ?? "",
             Deno.env.get("SUPABASE_ANON_KEY") ?? "",
             {
                 global: {
-                    headers: { Authorization: req.headers.get("Authorization")! },
+                    headers: { Authorization: authHeader || '' },
                 },
             }
         );
@@ -32,7 +33,7 @@ serve(async (req: Request) => {
         } = await supabaseClient.auth.getUser();
 
         if (authError || !user) {
-            return new Response(JSON.stringify({ error: 'Unauthorized' }), {
+            return new Response(JSON.stringify({ error: 'Unauthorized', details: authError }), {
                 status: 401,
                 headers: { ...corsHeaders, "Content-Type": "application/json" },
             });
@@ -118,9 +119,10 @@ serve(async (req: Request) => {
         // Subaccount created successfully!
         const asaasWalletId = asaasResult.walletId || asaasResult.id;
 
-        // Save the wallet ID to the profile
+        // Save the wallet ID to the profile (unifying both columns)
         const { error: updateError } = await supabaseAdmin.from('perfis').update({
             recebimento_asaas_id: asaasWalletId,
+            asaas_wallet_id: asaasWalletId,
             asaas_status: 'ACTIVE'
         }).eq('id', profileId);
 

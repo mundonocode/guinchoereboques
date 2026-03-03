@@ -6,7 +6,7 @@ import { useRouter } from 'next/navigation';
 import {
     User, Mail, Phone, Lock, Briefcase, Truck, Shield,
     CreditCard, Wallet, Camera, CheckCircle, ArrowRight, ArrowLeft,
-    UploadCloud, FileCheck, Check
+    UploadCloud, FileCheck, Check, AlertCircle
 } from 'lucide-react';
 
 const supabase = createClient();
@@ -42,6 +42,7 @@ export default function OnboardingPage() {
     const [loading, setLoading] = useState(false);
     const [loadingInit, setLoadingInit] = useState(true);
     const [userId, setUserId] = useState<string | null>(null);
+    const [error, setError] = useState<string | null>(null);
 
     const [formData, setFormData] = useState<OnboardingData>({
         nome_completo: '',
@@ -65,62 +66,125 @@ export default function OnboardingPage() {
 
     useEffect(() => {
         async function loadProfile() {
-            const { data: { user } } = await supabase.auth.getUser();
-            if (!user) {
-                router.push('/login');
-                return;
-            }
-            setUserId(user.id);
+            try {
+                const { data: { user } } = await supabase.auth.getUser();
+                if (!user) {
+                    router.push('/login');
+                    return;
+                }
+                setUserId(user.id);
 
-            const { data: perfil } = await supabase
-                .from('perfis')
-                .select('*')
-                .eq('id', user.id)
-                .single();
-
-            if (perfil) {
-                setFormData(prev => ({
-                    ...prev,
-                    nome_completo: perfil.nome_completo || '',
-                    cpf: perfil.cpf || '',
-                    telefone: perfil.telefone || '',
-                    cnh_com_ear: perfil.cnh_com_ear || '',
-                    possui_conta_asaas: perfil.possui_conta_asaas || false,
-                    asaas_wallet_id: perfil.asaas_wallet_id || '',
-                    tipo_pessoa: (perfil.tipo_pessoa as 'PF' | 'PJ') || 'PF',
-                    recebimento_nome: perfil.recebimento_nome || perfil.nome_completo || '',
-                    recebimento_email: perfil.recebimento_email || user.email || '',
-                    recebimento_cnpj: perfil.recebimento_cnpj || '',
-                    dados_bancarios: perfil.dados_bancarios || '',
-                    cnh_foto_url: perfil.cnh_foto_url || '',
-                    veiculo_foto_url: perfil.veiculo_foto_url || ''
-                }));
-
-                // Also check vehicle
-                const { data: veiculo } = await supabase
-                    .from('veiculos_guincho')
+                const { data: perfil, error: perfilError } = await supabase
+                    .from('perfis')
                     .select('*')
-                    .eq('perfil_id', user.id)
-                    .single();
+                    .eq('id', user.id)
+                    .maybeSingle();
 
-                if (veiculo) {
+                console.log('Onboarding: Profile load result', { perfil, perfilError });
+
+                if (perfilError && perfilError.code !== 'PGRST116') {
+                    console.error('Error loading profile:', perfilError);
+                    setError('Erro ao carregar perfil: ' + perfilError.message);
+                }
+
+                if (perfil) {
                     setFormData(prev => ({
                         ...prev,
-                        placa: veiculo.placa || '',
-                        marca_modelo: veiculo.marca_modelo || '',
-                        tipo_plataforma: veiculo.tipo_plataforma_v2 || '',
-                        registro_antt: veiculo.registro_antt || ''
+                        nome_completo: perfil.nome_completo || '',
+                        cpf: perfil.cpf || '',
+                        telefone: perfil.telefone || '',
+                        cnh_com_ear: (perfil as any).cnh_com_ear || '',
+                        possui_conta_asaas: (perfil as any).possui_conta_asaas || false,
+                        asaas_wallet_id: (perfil as any).asaas_wallet_id || '',
+                        tipo_pessoa: ((perfil as any).tipo_pessoa as 'PF' | 'PJ') || 'PF',
+                        recebimento_nome: (perfil as any).recebimento_nome || perfil.nome_completo || '',
+                        recebimento_email: (perfil as any).recebimento_email || user.email || '',
+                        recebimento_cnpj: (perfil as any).recebimento_cnpj || '',
+                        dados_bancarios: (perfil as any).dados_bancarios || '',
+                        cnh_foto_url: (perfil as any).cnh_foto_url || '',
+                        veiculo_foto_url: (perfil as any).veiculo_foto_url || ''
                     }));
+
+                    // Also check vehicle
+                    const { data: veiculo, error: veiculoError } = await supabase
+                        .from('veiculos_guincho')
+                        .select('*')
+                        .eq('perfil_id', user.id)
+                        .maybeSingle();
+
+                    console.log('Onboarding: Vehicle load result', { veiculo, veiculoError });
+
+                    if (veiculoError && veiculoError.code !== 'PGRST116') {
+                        console.error('Error loading vehicle:', veiculoError);
+                    }
+
+                    if (veiculo) {
+                        setFormData(prev => ({
+                            ...prev,
+                            placa: veiculo.placa || '',
+                            marca_modelo: veiculo.marca_modelo || '',
+                            tipo_plataforma: (veiculo as any).tipo_plataforma_v2 || '',
+                            registro_antt: (veiculo as any).registro_antt || ''
+                        }));
+                    }
                 }
+            } catch (err: any) {
+                console.error('Initialization error:', err);
+                setError('Erro ao carregar página de onboarding. Tente atualizar.');
+            } finally {
+                setLoadingInit(false);
             }
-            setLoadingInit(false);
         }
         loadProfile();
     }, [router]);
 
+    const formatCPF = (value: string) => {
+        return value
+            .replace(/\D/g, '')
+            .replace(/(\d{3})(\d)/, '$1.$2')
+            .replace(/(\d{3})(\d)/, '$1.$2')
+            .replace(/(\d{3})(\d{1,2})/, '$1-$2')
+            .replace(/(-\d{2})\d+?$/, '$1');
+    };
+
+    const formatPhone = (value: string) => {
+        return value
+            .replace(/\D/g, '')
+            .replace(/(\d{2})(\d)/, '($1) $2')
+            .replace(/(\d{5})(\d)/, '$1-$2')
+            .replace(/(-\d{4})\d+?$/, '$1');
+    };
+
+    const translateError = (err: any) => {
+        if (!err) return null;
+
+        const message = (err.message || '').toLowerCase();
+        const details = (err.details || '').toLowerCase();
+        const code = String(err.code || '');
+        const searchStr = `${message} ${details}`;
+
+        if (code === '23505' || message.includes('unique constraint') || message.includes('already exists')) {
+            if (searchStr.includes('perfis_cpf_key') || searchStr.includes('(cpf)')) return 'Este CPF já está cadastrado em outra conta.';
+            if (searchStr.includes('veiculos_guincho_placa_key') || searchStr.includes('(placa)')) return 'Esta placa já está cadastrada para outro veículo.';
+            if (searchStr.includes('veiculos_guincho_perfil_id_key')) return 'Você já possui um veículo cadastrado neste perfil.';
+            return 'Alguns dos dados informados (CPF ou Placa) já estão em uso.';
+        }
+
+        return err.message || 'Ocorreu um erro inesperado. Tente novamente.';
+    };
+
     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
         const { name, value, type } = e.target;
-        const val = type === 'checkbox' ? (e.target as HTMLInputElement).checked : value;
+        let val = type === 'checkbox' ? (e.target as HTMLInputElement).checked : value;
+
+        if (name === 'cpf') {
+            val = formatCPF(val as string);
+        } else if (name === 'telefone' || name === 'recebimento_cnpj') {
+            // Apply similar logic for phone or simplecnpj if needed, 
+            // but user only asked for cpf and telefone specifically in the request.
+            if (name === 'telefone') val = formatPhone(val as string);
+        }
+
         setFormData(prev => ({ ...prev, [name]: val }));
     };
 
@@ -131,16 +195,24 @@ export default function OnboardingPage() {
         if (!userId) return;
         setLoading(true);
         try {
+            setError(null);
             // Update Perfil
-            await supabase.from('perfis').update({
+            const { error: profileError } = await supabase.from('perfis').update({
                 nome_completo: formData.nome_completo,
                 cpf: formData.cpf,
                 telefone: formData.telefone,
                 cnh_com_ear: formData.cnh_com_ear
-            }).eq('id', userId);
+            } as any).eq('id', userId);
+
+            if (profileError) throw profileError;
 
             // Upsert Vehicle
-            const { data: existing } = await supabase.from('veiculos_guincho').select('id').eq('perfil_id', userId).single();
+            const { data: existing, error: checkError } = await supabase.from('veiculos_guincho').select('id').eq('perfil_id', userId).maybeSingle();
+
+            if (checkError) {
+                console.error('Error checking existing vehicle:', checkError);
+            }
+
             const vehicleData = {
                 perfil_id: userId,
                 placa: formData.placa.toUpperCase(),
@@ -151,13 +223,21 @@ export default function OnboardingPage() {
             };
 
             if (existing) {
-                await supabase.from('veiculos_guincho').update(vehicleData).eq('id', existing.id);
+                const { error: updateErr } = await supabase.from('veiculos_guincho').update(vehicleData as any).eq('id', existing.id);
+                if (updateErr) throw updateErr;
             } else {
-                await supabase.from('veiculos_guincho').insert([vehicleData]);
+                const { error: insertErr } = await supabase.from('veiculos_guincho').insert([{ ...vehicleData, tipo: 'guincho' } as any]);
+                if (insertErr) throw insertErr;
             }
             nextStep();
-        } catch (error) {
-            console.error('Error saving step 1:', error);
+        } catch (err: any) {
+            console.error('Error saving step 1:', {
+                msg: err.message,
+                code: err.code,
+                det: err.details,
+                keys: Object.keys(err)
+            }, err);
+            setError(translateError(err));
         } finally {
             setLoading(false);
         }
@@ -167,7 +247,8 @@ export default function OnboardingPage() {
         if (!userId) return;
         setLoading(true);
         try {
-            await supabase.from('perfis').update({
+            setError(null);
+            const { error: profileError } = await supabase.from('perfis').update({
                 possui_conta_asaas: formData.possui_conta_asaas,
                 asaas_wallet_id: formData.possui_conta_asaas ? formData.asaas_wallet_id : null,
                 tipo_pessoa: formData.tipo_pessoa,
@@ -175,11 +256,14 @@ export default function OnboardingPage() {
                 recebimento_email: formData.recebimento_email,
                 recebimento_cnpj: formData.tipo_pessoa === 'PJ' ? formData.recebimento_cnpj : null,
                 dados_bancarios: formData.dados_bancarios
-            }).eq('id', userId);
+            } as any).eq('id', userId);
+
+            if (profileError) throw profileError;
 
             nextStep();
-        } catch (error) {
-            console.error('Error saving step 2:', error);
+        } catch (err: any) {
+            console.error('Error saving step 2:', err.message || err.code || 'Unknown Error', err);
+            setError(translateError(err));
         } finally {
             setLoading(false);
         }
@@ -206,8 +290,9 @@ export default function OnboardingPage() {
                 .getPublicUrl(filePath);
 
             setFormData(prev => ({ ...prev, [field]: publicUrl }));
-        } catch (error) {
-            console.error('Error uploading file:', error);
+        } catch (error: any) {
+            console.error('Error uploading file:', error.message || 'Unknown Error', error);
+            setError('Erro ao enviar arquivo. Verifique sua conexão.');
         } finally {
             setLoading(false);
         }
@@ -217,16 +302,24 @@ export default function OnboardingPage() {
         if (!userId) return;
         setLoading(true);
         try {
-            await supabase.from('perfis').update({
+            setError(null);
+            const { error: profileError } = await supabase.from('perfis').update({
                 cnh_foto_url: formData.cnh_foto_url,
                 veiculo_foto_url: formData.veiculo_foto_url,
                 onboarding_completo: true,
                 status_verificacao: 'pendente'
-            }).eq('id', userId);
+            } as any).eq('id', userId);
 
+            if (profileError) throw profileError;
+
+            // Refresh server components to update the layout state (onboarding_completo)
+            router.refresh();
+
+            // Redirect to the dashboard
             router.push('/motorista');
-        } catch (error) {
-            console.error('Error finalizing onboarding:', error);
+        } catch (err: any) {
+            console.error('Error finalizing onboarding:', err.message || err.code || 'Unknown Error', err);
+            setError(translateError(err));
         } finally {
             setLoading(false);
         }
@@ -243,21 +336,21 @@ export default function OnboardingPage() {
     return (
         <div className="min-h-screen bg-white flex flex-col">
             {/* Header / Stepper Progress */}
-            <header className="p-6 md:px-12 flex items-center justify-between border-b border-zinc-100 sticky top-0 bg-white z-20">
+            <header className="p-6 md:px-12 flex items-center justify-between border-b border-white/10 sticky top-0 bg-black z-20">
                 <div className="flex items-center gap-4">
                     <img src="/logo-oficial.png.png" alt="Logo" className="h-8 w-auto" />
-                    <div className="h-4 w-[1px] bg-zinc-200 mx-2 hidden sm:block"></div>
-                    <span className="text-[13px] font-bold uppercase tracking-widest text-zinc-400 hidden sm:block">Onboarding Profissional</span>
+                    <div className="h-4 w-[1px] bg-white/20 mx-2 hidden sm:block"></div>
+                    <span className="text-[11px] font-black uppercase tracking-[0.2em] text-zinc-500 hidden sm:block">Onboarding Profissional</span>
                 </div>
 
                 <div className="flex items-center gap-3">
                     {[1, 2, 3].map((s) => (
                         <div key={s} className="flex items-center gap-2">
-                            <div className={`w-8 h-8 rounded-full flex items-center justify-center text-[13px] font-bold transition-all ${currentStep >= s ? 'bg-black text-white' : 'bg-zinc-100 text-zinc-400'
+                            <div className={`w-8 h-8 rounded-full flex items-center justify-center text-[13px] font-bold transition-all ${currentStep >= s ? 'bg-amber-500 text-black' : 'bg-zinc-800 text-zinc-500'
                                 }`}>
                                 {currentStep > s ? <Check size={16} strokeWidth={3} /> : s}
                             </div>
-                            {s < 3 && <div className={`w-6 h-[2px] rounded-full sm:w-12 ${currentStep > s ? 'bg-black' : 'bg-zinc-100'}`}></div>}
+                            {s < 3 && <div className={`w-6 h-[2px] rounded-full sm:w-12 ${currentStep > s ? 'bg-amber-500' : 'bg-zinc-800'}`}></div>}
                         </div>
                     ))}
                 </div>
@@ -265,6 +358,13 @@ export default function OnboardingPage() {
 
             <main className="flex-1 flex flex-col items-center justify-center p-6 md:p-12">
                 <div className="max-w-[480px] w-full space-y-10">
+                    {error && (
+                        <div className="p-4 bg-red-50 border border-red-100 rounded-xl flex items-start gap-3 animate-in fade-in slide-in-from-top-2">
+                            <AlertCircle className="text-red-500 shrink-0 mt-0.5" size={18} />
+                            <p className="text-[13px] text-red-600 font-bold leading-tight">{error}</p>
+                        </div>
+                    )}
+
                     {/* STEP 1: PERSONAL & VEHICLE */}
                     {currentStep === 1 && (
                         <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">

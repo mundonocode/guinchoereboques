@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Roboto, Poppins } from "next/font/google";
+import { Roboto, Poppins, Inter } from "next/font/google";
 import { AuthProvider } from "@/contexts/AuthContext";
 import "./globals.css";
 
@@ -13,6 +13,11 @@ const poppins = Poppins({
   weight: ["400", "500", "600", "700", "900"],
   subsets: ["latin"],
   variable: "--font-poppins",
+});
+
+const inter = Inter({
+  subsets: ["latin"],
+  variable: "--font-inter",
 });
 
 export const metadata: Metadata = {
@@ -40,7 +45,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="pt-BR" className="scroll-smooth">
-      <body className={`${roboto.variable} ${poppins.variable} font-sans antialiased text-foreground bg-background`}>
+      <body className={`${roboto.variable} ${poppins.variable} ${inter.variable} font-sans antialiased text-foreground bg-background`}>
         <AuthProvider>
           {children}
         </AuthProvider>

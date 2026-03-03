@@ -12,6 +12,7 @@ import { RideVehicleForm } from './components/RideVehicleForm';
 import { RidePaymentForm } from './components/RidePaymentForm';
 import { RideSearchingStatus } from './components/RideSearchingStatus';
 import { RideActiveStatus } from './components/RideActiveStatus';
+import { RidePixDisplay } from './components/RidePixDisplay';
 
 // Para esse MVP, manteremos um fallback para SP se a localização falhar
 const DEFAULT_CENTER = { lat: -23.5505, lng: -46.6333 };
@@ -41,8 +42,9 @@ export function ClienteMapClient() {
     const [originAddressName, setOriginAddressName] = useState('Buscando localização...');
     const [destAddressName, setDestAddressName] = useState('Para onde vamos levar seu veículo?');
 
-    const [rideState, setRideState] = useState<'idle' | 'filling_details' | 'payment' | 'searching' | 'active'>('idle');
+    const [rideState, setRideState] = useState<'idle' | 'filling_details' | 'payment' | 'pix_payment' | 'searching' | 'active'>('idle');
     const [currentRideId, setCurrentRideId] = useState<string | null>(null);
+    const [pixData, setPixData] = useState<any>(null);
     const [rideData, setRideData] = useState<any>(null);
     const [driverInfo, setDriverInfo] = useState<any>(null);
     const [rejectedDrivers, setRejectedDrivers] = useState<string[]>([]);
@@ -378,10 +380,6 @@ export function ClienteMapClient() {
             alert("Dados incompletos para a solicitação (Localização ou Destino ausentes).");
             return;
         }
-
-        setRideState('searching');
-        setIsPanelOpen(false);
-
         try {
             const { data: newRide, error: rideError } = await supabase
                 .from('corridas')
@@ -410,6 +408,31 @@ export function ClienteMapClient() {
             if (!newRide) throw new Error("Falha ao criar corrida");
 
             setCurrentRideId(newRide.id);
+
+            // Se for Pix, gerar cobrança no Asaas AGORA
+            if (paymentMethod === 'pix') {
+                const { data: paymentRes, error: paymentError } = await supabase.functions.invoke('asaas-create-payment', {
+                    body: {
+                        rideId: newRide.id,
+                        clienteId: user.id,
+                        value: estimatedPrice,
+                        billingType: 'PIX',
+                        description: `GGF Pix - Corrida ${newRide.id.split('-')[0]}`
+                    }
+                });
+
+                if (paymentError || !paymentRes?.success) {
+                    console.error("Erro ao gerar Pix:", paymentError || paymentRes);
+                    alert("Aviso: Falha ao gerar código Pix. Continuaremos buscando um motorista, mas o pagamento deverá ser resolvido depois.");
+                    setRideState('searching');
+                } else {
+                    setPixData(paymentRes.pix);
+                    setRideState('pix_payment');
+                }
+            } else {
+                setRideState('searching');
+            }
+
             await findAndAssignDriver(newRide.id, []);
 
         } catch (error: any) {
@@ -434,6 +457,7 @@ export function ClienteMapClient() {
         switch (rideState) {
             case 'filling_details': return "Detalhes do Veículo";
             case 'payment': return "Revisão e Pagamento";
+            case 'pix_payment': return "Pagamento via Pix";
             default: return undefined;
         }
     };
@@ -445,11 +469,40 @@ export function ClienteMapClient() {
         if (confirmed) {
             console.log("DEBUG: Cancellation confirmed by user");
             if (currentRideId) {
-                const { error } = await supabase.from('corridas').update({ status: 'cancelada' }).eq('id', currentRideId);
-                if (error) {
-                    console.error("DEBUG: Error updating ride status to canceled:", error);
+                // Buscamos info da corrida para saber se precisa de estorno
+                const { data: rideData } = await supabase
+                    .from('corridas')
+                    .select('asaas_payment_id, asaas_payment_status, forma_pagamento')
+                    .eq('id', currentRideId)
+                    .single();
+
+                // Se foi pago via Pix e o status no Asaas indica que já recebemos o dinheiro
+                if (rideData?.asaas_payment_id &&
+                    rideData.forma_pagamento === 'pix' &&
+                    (rideData.asaas_payment_status === 'RECEIVED' || rideData.asaas_payment_status === 'CONFIRMED')) {
+
+                    console.log("DEBUG: Triggering automatic refund for Pix payment...");
+                    try {
+                        const { data, error: refundError } = await supabase.functions.invoke('asaas-refund-payment', {
+                            body: { rideId: currentRideId }
+                        });
+
+                        if (refundError) throw refundError;
+                        console.log("DEBUG: Refund requested successfully", data);
+                        alert("Sua corrida foi cancelada e o valor do Pix será estornado automaticamente.");
+                    } catch (err) {
+                        console.error("DEBUG: Error triggering refund:", err);
+                        // Fallback: apenas cancela no banco
+                        await supabase.from('corridas').update({ status: 'cancelada' }).eq('id', currentRideId);
+                        alert("Corrida cancelada. Ocorreu um erro no estorno automático, por favor entre em contato com o suporte.");
+                    }
                 } else {
-                    console.log("DEBUG: Ride status updated to canceled in database");
+                    const { error } = await supabase.from('corridas').update({ status: 'cancelada' }).eq('id', currentRideId);
+                    if (error) {
+                        console.error("DEBUG: Error updating ride status to canceled:", error);
+                    } else {
+                        console.log("DEBUG: Ride status updated to canceled in database");
+                    }
                 }
             } else {
                 console.warn("DEBUG: No currentRideId found to cancel in database");
@@ -543,6 +596,17 @@ export function ClienteMapClient() {
                             estimatedPrice={estimatedPrice}
                             distanceKm={distanceKm}
                             onConfirm={handleConfirmPayment}
+                        />
+                    </div>
+                )}
+                {rideState === 'pix_payment' && pixData && (
+                    <div className="w-full h-full flex flex-col">
+                        <RidePixDisplay
+                            pixData={pixData}
+                            onClose={() => {
+                                setIsPanelOpen(false);
+                                setRideState('searching');
+                            }}
                         />
                     </div>
                 )}

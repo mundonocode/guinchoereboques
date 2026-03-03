@@ -53,6 +53,23 @@ export function MotoristaMapClient() {
     useEffect(() => {
         let watchId: number;
 
+        const handleGeoError = (error: GeolocationPositionError) => {
+            let errorMsg = "Erro GPS desconhecido";
+            switch (error.code) {
+                case error.PERMISSION_DENIED:
+                    errorMsg = "Permissão de localização negada pelo usuário.";
+                    break;
+                case error.POSITION_UNAVAILABLE:
+                    errorMsg = "Informações de localização indisponíveis.";
+                    break;
+                case error.TIMEOUT:
+                    errorMsg = "Tempo limite atingido ao obter localização.";
+                    break;
+            }
+            console.error("Erro GPS:", error.code, errorMsg, error.message);
+            if (!location) setLocation(DEFAULT_CENTER);
+        };
+
         if (isOnline && 'geolocation' in navigator) {
             watchId = navigator.geolocation.watchPosition(
                 (pos) => {
@@ -62,13 +79,14 @@ export function MotoristaMapClient() {
                         map.panTo(coords);
                     }
                 },
-                (error) => console.error("Erro GPS:", error),
-                { enableHighAccuracy: true, timeout: 5000, maximumAge: 0 }
+                handleGeoError,
+                { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
             );
-        } else if (!isOnline) {
+        } else if (!isOnline && 'geolocation' in navigator) {
             navigator.geolocation.getCurrentPosition(
                 (pos) => setLocation({ lat: pos.coords.latitude, lng: pos.coords.longitude }),
-                () => setLocation(DEFAULT_CENTER)
+                handleGeoError,
+                { timeout: 10000 }
             );
         }
 

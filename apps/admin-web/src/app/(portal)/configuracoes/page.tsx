@@ -18,29 +18,49 @@ export default function ConfiguraçõesPage() {
     });
 
     useEffect(() => {
+        console.log("ConfiguraçõesPage: Iniciando busca de configurações...");
+
+        // Safety timeout to prevent permanent loading state
+        const timeout = setTimeout(() => {
+            console.warn("ConfiguraçõesPage: Timeout na busca de configurações. Forçando encerramento do loading.");
+            setIsLoading(false);
+        }, 5000);
+
         async function fetchConfig() {
             try {
+                console.log("ConfiguraçõesPage: Chamando Supabase...");
                 const { data, error } = await supabase
                     .from('configuracoes')
                     .select('*')
                     .limit(1)
                     .single();
 
+                if (error) {
+                    console.error("ConfiguraçõesPage: Erro do Supabase:", error);
+                }
+
                 if (data) {
+                    console.log("ConfiguraçõesPage: Dados recebidos:", data);
                     setConfigId(data.id);
                     setConfig(prev => ({
                         ...prev,
                         split_percentage: data.split_percentage || 15.00,
                         asaas_api_key: data.asaas_api_key || '',
                     }));
+                } else {
+                    console.log("ConfiguraçõesPage: Nenhum dado encontrado.");
                 }
             } catch (err) {
-                console.error("Error fetching configs:", err);
+                console.error("ConfiguraçõesPage: Exceção na busca:", err);
             } finally {
+                clearTimeout(timeout);
+                console.log("ConfiguraçõesPage: Finalizando loading.");
                 setIsLoading(false);
             }
         }
         fetchConfig();
+
+        return () => clearTimeout(timeout);
     }, []);
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {

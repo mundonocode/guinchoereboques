@@ -55,17 +55,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     useEffect(() => {
         const initializeAuth = async () => {
+            console.log("AuthContext: Iniciando initializeAuth...");
             try {
                 const { data: { session: initialSession } } = await supabase.auth.getSession();
+                console.log("AuthContext: Sessão inicial:", initialSession ? "Logado" : "Não logado");
                 setSession(initialSession);
                 setUser(initialSession?.user || null);
                 if (initialSession) {
                     await fetchUserRole(initialSession.user.id);
                 } else {
+                    console.log("AuthContext: Sem sessão, encerrando loading.");
                     setIsLoading(false);
                 }
             } catch (error) {
-                console.error('Auth initialization error:', error);
+                console.error('AuthContext: Erro na inicialização:', error);
                 setIsLoading(false);
             }
         };

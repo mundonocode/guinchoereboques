@@ -6,6 +6,7 @@ import { useRequestStore } from '../../store/useRequestStore';
 import { supabase } from '../../src/lib/supabase';
 import { useAuth } from '../../src/contexts/AuthContext';
 import * as Location from 'expo-location';
+import PixModal from '../../src/components/PixModal';
 
 export default function RequestPaymentScreen() {
     const router = useRouter();
@@ -20,6 +21,9 @@ export default function RequestPaymentScreen() {
     const [ccName, setCcName] = useState('');
     const [ccExpiry, setCcExpiry] = useState('');
     const [ccCvv, setCcCvv] = useState('');
+
+    const [pixData, setPixData] = useState<any>(null);
+    const [isPixModalVisible, setIsPixModalVisible] = useState(false);
 
     // Valores simulados para exibição, já que estamos implementando a navegação
     // Em um fluxo real, preencheríamos a store na index.tsx
@@ -45,27 +49,54 @@ export default function RequestPaymentScreen() {
                     destino_lng: requestDetails.destino?.longitude || -46.633,
                     valor: estimatedPrice,
                     distancia_km: distanceKm,
-                    status: 'buscando_motorista',
+                    status: paymentMethod === 'pix' ? 'pendente_pagamento' : 'buscando_motorista',
                     veiculo_placa: requestDetails.placa,
                     veiculo_cor: requestDetails.cor,
                     veiculo_marca_modelo: requestDetails.marcaModelo,
                     problema_descricao: requestDetails.problemaDescricao,
                     problema_tipo: requestDetails.problemaTipo,
+                    metodo_pagamento: paymentMethod
                 })
                 .select()
                 .single();
 
             if (rideError) throw rideError;
-
-            // Optional: Create payment intent via Edge Function here
-            // await supabase.functions.invoke('asaas-create-payment', { ... })
+            if (!rideData) throw new Error("Falha ao criar corrida");
 
             setCurrentRideId(rideData.id);
-            router.replace('/(cliente)?searching=true');
+
+            // Se for Pix, gerar cobrança no Asaas
+            if (paymentMethod === 'pix') {
+                console.log('Generating Pix for ride:', rideData.id);
+                console.log('Session status:', !!session);
+
+                const { data: paymentRes, error: paymentError } = await supabase.functions.invoke('asaas-create-payment', {
+                    body: {
+                        rideId: rideData.id,
+                        clienteId: session.user.id,
+                        value: estimatedPrice,
+                        billingType: 'PIX',
+                        description: `GGF Pix - Corrida ${rideData.id.split('-')[0]}`
+                    }
+                });
+
+                console.log('Payment invocation result:', { success: paymentRes?.success, error: paymentError });
+
+                if (paymentError || !paymentRes?.success) {
+                    console.error("Erro completo ao gerar Pix no mobile:", JSON.stringify(paymentError || paymentRes, null, 2));
+                    Alert.alert('Aviso', 'Falha ao gerar código Pix. Continuaremos buscando um motorista, mas o pagamento deverá ser resolvido depois.');
+                    router.replace('/(cliente)?searching=true');
+                } else {
+                    setPixData(paymentRes.pix);
+                    setIsPixModalVisible(true);
+                }
+            } else {
+                router.replace('/(cliente)?searching=true');
+            }
 
         } catch (error: any) {
             console.error('Error creating ride:', error);
-            Alert.alert('Erro', 'Não foi possível solicitar o guincho.');
+            Alert.alert('Erro', `Não foi possível solicitar o guincho: ${error.message}`);
         } finally {
             setIsSubmitting(false);
         }
@@ -221,6 +252,15 @@ export default function RequestPaymentScreen() {
                     </TouchableOpacity>
                 </View>
             </KeyboardAvoidingView>
+
+            <PixModal
+                visible={isPixModalVisible}
+                pixData={pixData}
+                onClose={() => {
+                    setIsPixModalVisible(false);
+                    router.replace('/(cliente)?searching=true');
+                }}
+            />
         </SafeAreaView>
     );
 }

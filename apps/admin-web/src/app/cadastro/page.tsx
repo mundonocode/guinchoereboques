@@ -44,17 +44,6 @@ export default function RegisterPage() {
             if (authError) throw authError;
 
             if (data.user) {
-                // Insert into perfis table
-                const { error: profileError } = await supabase.from('perfis').insert({
-                    id: data.user.id,
-                    nome_completo: nomeCompleto,
-                    role: role,
-                });
-
-                if (profileError && profileError.code !== '23505') {
-                    console.error('Error creating profile:', profileError);
-                }
-
                 setSuccess(true);
                 // Redirect user after a short delay or based on role
                 setTimeout(() => {

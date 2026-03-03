@@ -11,6 +11,7 @@ import { useAuth } from '../../src/contexts/AuthContext';
 import { useRequestStore } from '../../store/useRequestStore';
 import { supabase } from '../../src/lib/supabase';
 import ChatModal from '../../src/components/ChatModal';
+import CancellationModal from '../../src/components/CancellationModal';
 import * as Location from 'expo-location';
 
 const { width, height } = Dimensions.get('window');
@@ -22,7 +23,7 @@ export default function HomeScreen() {
     const { destinationLat, destinationLng, destinationAddress, searching } = useLocalSearchParams();
     const { location, errorMsg, loading } = useLocation();
 
-    const { currentRideId: storeRideId, setRequestDetails } = useRequestStore();
+    const { currentRideId: storeRideId, setRequestDetails, setCurrentRideId: setStoreRideId, resetRequestDetails } = useRequestStore();
 
     const [selectedVehicle, setSelectedVehicle] = useState<string | null>(null);
     const [routeInfo, setRouteInfo] = useState<{ distance: number, duration: number } | null>(null);
@@ -33,6 +34,10 @@ export default function HomeScreen() {
 
     // Chat state
     const [showChat, setShowChat] = useState(false);
+
+    // Cancellation Modal state
+    const [showCancellationModal, setShowCancellationModal] = useState(false);
+    const [cancellationType, setCancellationType] = useState<'refunded' | 'cancelled_only'>('cancelled_only');
 
     // UI state
     const [originAddressName, setOriginAddressName] = useState('Carregando...');
@@ -68,9 +73,22 @@ export default function HomeScreen() {
 
     useEffect(() => {
         if (searching === 'true' && storeRideId && rideState === 'idle') {
-            setCurrentRideId(storeRideId);
-            setRideState('searching');
-            findAndAssignDriver(storeRideId, []);
+            // Check if ride is actually paid or ready
+            const checkRideStatus = async () => {
+                const { data } = await supabase.from('corridas').select('status').eq('id', storeRideId).single();
+                if (data?.status === 'pendente_pagamento') {
+                    // Keep in searching state UI but don't call findAndAssignDriver yet
+                    // The webhook or a manual check will transition it
+                    console.log('Ride is pending payment. Waiting...');
+                    setRideState('searching');
+                    setCurrentRideId(storeRideId);
+                } else {
+                    setCurrentRideId(storeRideId);
+                    setRideState('searching');
+                    findAndAssignDriver(storeRideId, []);
+                }
+            };
+            checkRideStatus();
         }
     }, [searching, storeRideId, rideState]);
 
@@ -125,6 +143,12 @@ export default function HomeScreen() {
                                 vehicle
                             });
                         }
+                    } else if (updatedRide.status === 'buscando_motorista' && rideState === 'searching') {
+                        // If it transitioned from pendente_pagamento to buscando_motorista
+                        console.log('Ride transitioned to searching for driver.');
+                        if (!updatedRide.motorista_id) {
+                            findAndAssignDriver(updatedRide.id, rejectedDrivers);
+                        }
                     } else if (updatedRide.status === 'rejeitada') {
                         // Driver rejected! Try to find another one.
                         console.log('Driver rejected the ride. Searching for next...');
@@ -155,6 +179,13 @@ export default function HomeScreen() {
 
     const findAndAssignDriver = async (rideId: string, excludedIds: string[]) => {
         try {
+            // Check if ride is still active and needs a driver
+            const { data: rideCheck } = await supabase.from('corridas').select('status').eq('id', rideId).single();
+            if (!rideCheck || (rideCheck.status !== 'buscando_motorista' && rideCheck.status !== 'pendente_pagamento')) {
+                console.log('Ride no longer active for driver assignment. Current status:', rideCheck?.status);
+                return;
+            }
+
             const { data: drivers, error: driverError } = await supabase
                 .from('perfis')
                 .select('id')
@@ -391,7 +422,50 @@ export default function HomeScreen() {
 
                     <TouchableOpacity
                         style={styles.cancelButton}
-                        onPress={() => setRideState('idle')}
+                        onPress={async () => {
+                            if (!currentRideId) {
+                                setRideState('idle');
+                                return;
+                            }
+
+                            try {
+                                // Buscamos info para verificar se precisa de estorno
+                                const { data: rideData } = await supabase
+                                    .from('corridas')
+                                    .select('asaas_payment_id, asaas_payment_status, metodo_pagamento')
+                                    .eq('id', currentRideId)
+                                    .single();
+
+                                if (rideData?.asaas_payment_id &&
+                                    rideData.metodo_pagamento === 'pix' &&
+                                    (rideData.asaas_payment_status === 'RECEIVED' || rideData.asaas_payment_status === 'CONFIRMED')) {
+
+                                    console.log('Solicitando estorno para corrida:', currentRideId);
+                                    await supabase.functions.invoke('asaas-refund-payment', {
+                                        body: { rideId: currentRideId }
+                                    });
+                                    setCancellationType('refunded');
+                                    setShowCancellationModal(true);
+                                } else {
+                                    // Se for PENDING ou outro status, apenas cancelamos no banco
+                                    const { error } = await supabase.from('corridas').update({ status: 'cancelada' }).eq('id', currentRideId);
+                                    if (error) throw error;
+                                    setCancellationType('cancelled_only');
+                                    setShowCancellationModal(true);
+                                }
+                            } catch (err) {
+                                console.error("Cancel error:", err);
+                                // Forçamos cancelamento local mesmo com erro de rede/api
+                                await supabase.from('corridas').update({ status: 'cancelada' }).eq('id', currentRideId);
+                                setCancellationType('cancelled_only');
+                                setShowCancellationModal(true);
+                            } finally {
+                                setRideState('idle');
+                                setCurrentRideId(null);
+                                setStoreRideId(null);
+                                router.replace('/(cliente)');
+                            }
+                        }}
                     >
                         <Text style={styles.cancelButtonText}>Cancelar Pedido</Text>
                     </TouchableOpacity>
@@ -475,10 +549,42 @@ export default function HomeScreen() {
                                                 {
                                                     text: "Sim",
                                                     onPress: async () => {
-                                                        await supabase.from('corridas').update({ status: 'cancelada' }).eq('id', currentRideId);
-                                                        setRideState('idle');
-                                                        setCurrentRideId(null);
-                                                        router.replace('/(cliente)');
+                                                        try {
+                                                            const { data: rideData } = await supabase
+                                                                .from('corridas')
+                                                                .select('asaas_payment_id, asaas_payment_status, metodo_pagamento')
+                                                                .eq('id', currentRideId)
+                                                                .single();
+
+                                                            if (rideData?.asaas_payment_id &&
+                                                                rideData.metodo_pagamento === 'pix' &&
+                                                                (rideData.asaas_payment_status === 'RECEIVED' || rideData.asaas_payment_status === 'CONFIRMED')) {
+
+                                                                console.log('Solicitando estorno para corrida ativa:', currentRideId);
+                                                                await supabase.functions.invoke('asaas-refund-payment', {
+                                                                    body: { rideId: currentRideId }
+                                                                });
+                                                                setCancellationType('refunded');
+                                                                setShowCancellationModal(true);
+                                                            } else {
+                                                                console.log('Cancelando sem estorno (não pago ou outro método)...');
+                                                                const { error } = await supabase.from('corridas').update({ status: 'cancelada' }).eq('id', currentRideId);
+                                                                if (error) throw error;
+                                                                setCancellationType('cancelled_only');
+                                                                setShowCancellationModal(true);
+                                                            }
+                                                        } catch (err) {
+                                                            console.error("Erro no cancelamento:", err);
+                                                            await supabase.from('corridas').update({ status: 'cancelada' }).eq('id', currentRideId);
+                                                            setCancellationType('cancelled_only');
+                                                            setShowCancellationModal(true);
+                                                        } finally {
+                                                            setRideState('idle');
+                                                            setCurrentRideId(null);
+                                                            setStoreRideId(null);
+                                                            setDriverInfo(null);
+                                                            router.replace('/(cliente)');
+                                                        }
                                                     }
                                                 }
                                             ]
@@ -524,6 +630,13 @@ export default function HomeScreen() {
                     </View>
                 )
             }
+
+            {/* Cancellation Modal Layer */}
+            <CancellationModal
+                visible={showCancellationModal}
+                type={cancellationType}
+                onClose={() => setShowCancellationModal(false)}
+            />
         </GestureHandlerRootView >
     );
 }
