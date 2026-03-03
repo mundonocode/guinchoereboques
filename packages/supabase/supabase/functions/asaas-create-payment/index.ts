@@ -224,6 +224,12 @@ serve(async (req: Request) => {
         }
 
         // 5. Create Payment
+        let remoteIp = req.headers.get("x-forwarded-for")?.split(",")[0].trim();
+        // Provide a fallback IP for local testing/environments since Asaas requires it for Credit Card
+        if (!remoteIp || remoteIp === "127.0.0.1" || remoteIp === "::1" || remoteIp.startsWith("192.168.")) {
+            remoteIp = "177.100.100.100";
+        }
+
         const paymentPayload = {
             customer: customerId,
             billingType: billingType,
@@ -231,6 +237,7 @@ serve(async (req: Request) => {
             dueDate: dueDate || new Date().toISOString().split('T')[0],
             description: description || 'Corrida Guincho',
             split: split.length > 0 ? split : undefined,
+            remoteIp: billingType === 'CREDIT_CARD' ? remoteIp : undefined,
             ...restParams
         };
 

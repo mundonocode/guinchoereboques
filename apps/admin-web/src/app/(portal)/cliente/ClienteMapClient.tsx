@@ -55,8 +55,9 @@ export function ClienteMapClient() {
     const [marcaModelo, setMarcaModelo] = useState('');
     const [problemaDescricao, setProblemaDescricao] = useState('');
     const [problemaTipo, setProblemaTipo] = useState('');
-    const problemTypes = ['Pane Mecânica', 'Colisão', 'Pneu Furado', 'Falta de Combustível'];
-    const isFormValid = placa && cor && marcaModelo && problemaTipo;
+    const [localRemocao, setLocalRemocao] = useState('');
+    const problemTypes = ['Parou de Funcionar', 'Capotado', 'Problema na Roda', 'Câmbio Travado', 'Sem Rodas (Furto)', 'Nenhuma das Opções'];
+    const isFormValid = placa && cor && marcaModelo && problemaTipo && localRemocao;
 
     // Pagamento
     const [paymentMethod, setPaymentMethod] = useState<'credit_card' | 'pix'>('pix');
@@ -410,6 +411,7 @@ export function ClienteMapClient() {
                     veiculo_marca_modelo: marcaModelo,
                     problema_descricao: problemaDescricao,
                     problema_tipo: problemaTipo,
+                    local_remocao: localRemocao,
                     metodo_pagamento: paymentMethod
                 })
                 .select()
@@ -420,25 +422,57 @@ export function ClienteMapClient() {
 
             setCurrentRideId(newRide.id);
 
-            // Se for Pix, gerar cobrança no Asaas AGORA
-            if (paymentMethod === 'pix') {
+            // Se for Pix ou Cartão, gerar cobrança no Asaas AGORA
+            if (paymentMethod === 'pix' || paymentMethod === 'credit_card') {
+                const billingType = paymentMethod === 'pix' ? 'PIX' : 'CREDIT_CARD';
+                let creditCard = undefined;
+                let creditCardHolderInfo = undefined;
+
+                if (paymentMethod === 'credit_card') {
+                    const [expMonth, expYear] = ccExpiry.includes('/') ? ccExpiry.split('/') : [ccExpiry.substring(0, 2), ccExpiry.substring(2, 4)];
+                    const formattedYear = expYear?.length === 2 ? `20${expYear}` : expYear;
+
+                    creditCard = {
+                        holderName: ccName,
+                        number: ccNumber.replace(/\D/g, ''),
+                        expiryMonth: expMonth,
+                        expiryYear: formattedYear,
+                        ccv: ccCvv
+                    };
+
+                    creditCardHolderInfo = {
+                        name: ccName,
+                        email: user.email || 'cliente@ggflabs.com',
+                        cpfCnpj: '00000000000', // Asaas expects CPF format. In production, this should come from user profile.
+                        postalCode: '01310100',
+                        addressNumber: '1000',
+                        phone: '11999999999'
+                    };
+                }
+
                 const { data: paymentRes, error: paymentError } = await supabase.functions.invoke('asaas-create-payment', {
                     body: {
                         rideId: newRide.id,
                         clienteId: user.id,
                         value: estimatedPrice,
-                        billingType: 'PIX',
-                        description: `GGF Pix - Corrida ${newRide.id.split('-')[0]}`
+                        billingType: billingType,
+                        description: `GGF ${billingType} - Corrida ${newRide.id.split('-')[0]}`,
+                        ...(paymentMethod === 'credit_card' ? { creditCard, creditCardHolderInfo } : {})
                     }
                 });
 
                 if (paymentError || !paymentRes?.success) {
-                    console.error("Erro ao gerar Pix:", paymentError || paymentRes);
-                    alert("Aviso: Falha ao gerar código Pix. Continuaremos buscando um motorista, mas o pagamento deverá ser resolvido depois.");
+                    console.error("Erro ao gerar pagamento no Asaas:", paymentError || paymentRes);
+                    alert(`Aviso: Falha ao processar pagamento via ${billingType}. Continuaremos buscando um motorista, mas o pagamento deverá ser resolvido depois.`);
                     setRideState('searching');
                 } else {
-                    setPixData(paymentRes.pix);
-                    setRideState('pix_payment');
+                    if (paymentMethod === 'pix') {
+                        setPixData(paymentRes.pix);
+                        setRideState('pix_payment');
+                    } else {
+                        // Cartão Aprovado
+                        setRideState('searching');
+                    }
                 }
             } else {
                 setRideState('searching');
@@ -589,6 +623,7 @@ export function ClienteMapClient() {
                             marcaModelo={marcaModelo} setMarcaModelo={setMarcaModelo}
                             problemaDescricao={problemaDescricao} setProblemaDescricao={setProblemaDescricao}
                             problemaTipo={problemaTipo} setProblemaTipo={setProblemaTipo}
+                            localRemocao={localRemocao} setLocalRemocao={setLocalRemocao}
                             problemTypes={problemTypes}
                             isFormValid={Boolean(isFormValid)}
                             onConfirm={handleConfirmDetails}

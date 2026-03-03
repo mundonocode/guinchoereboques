@@ -100,7 +100,7 @@ export default function Dashboard() {
   }, []);
 
   const systemAlerts = [
-    { title: 'Documento Pendente', desc: 'Motorista Marcos P. enviou CNH', icon: Info, color: '#F59E0B', bg: 'bg-amber-100' },
+    { title: 'Documento Pendente', desc: 'Guincheiro Marcos P. enviou CNH', icon: Info, color: '#F59E0B', bg: 'bg-amber-100' },
     { title: 'Novo Cadastro', desc: 'Guincho S.A solicitou parceria', icon: UserPlus, color: '#3B82F6', bg: 'bg-blue-100' },
     { title: 'Reclamação', desc: 'Cliente #829 reportou atraso', icon: AlertCircle, color: '#EF4444', bg: 'bg-red-100' },
   ];
@@ -123,7 +123,7 @@ export default function Dashboard() {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         <StatCard title="Faturamento Total" value={stats.faturamento} icon={DollarSign} iconColor="#10B981" iconBg="bg-emerald-50" />
         <StatCard title="Corridas Hoje" value={stats.corridasHoje} icon={Car} iconColor="#3B82F6" iconBg="bg-blue-50" />
-        <StatCard title="Motoristas Online" value={stats.motoristasOnline} icon={Truck} iconColor="#F59E0B" iconBg="bg-amber-50" />
+        <StatCard title="Guincheiros Online" value={stats.motoristasOnline} icon={Truck} iconColor="#F59E0B" iconBg="bg-amber-50" />
         <StatCard title="Novos Clientes" value={stats.novosClientes} icon={Users} iconColor="#8B5CF6" iconBg="bg-purple-50" />
       </div>
 
@@ -142,7 +142,7 @@ export default function Dashboard() {
                   <tr className="text-xs font-bold text-muted uppercase tracking-wider border-b border-border pb-4">
                     <th className="pb-4">ID</th>
                     <th className="pb-4">CLIENTE</th>
-                    <th className="pb-4">MOTORISTA</th>
+                    <th className="pb-4">GUINCHEIRO</th>
                     <th className="pb-4">VALOR</th>
                     <th className="pb-4">STATUS</th>
                   </tr>

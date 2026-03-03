@@ -135,6 +135,7 @@ export default function RequestPaymentScreen() {
                     veiculo_marca_modelo: requestDetails.marcaModelo,
                     problema_descricao: requestDetails.problemaDescricao,
                     problema_tipo: requestDetails.problemaTipo,
+                    local_remocao: requestDetails.localRemocao,
                     metodo_pagamento: paymentMethod
                 })
                 .select()
@@ -145,30 +146,59 @@ export default function RequestPaymentScreen() {
 
             setCurrentRideId(rideData.id);
 
-            // Se for Pix, gerar cobrança no Asaas
-            if (paymentMethod === 'pix') {
-                console.log('Generating Pix for ride:', rideData.id);
-                console.log('Session status:', !!session);
+            // Se for Pix ou Cartão, gerar cobrança no Asaas
+            if (paymentMethod === 'pix' || paymentMethod === 'credit_card') {
+                const billingType = paymentMethod === 'pix' ? 'PIX' : 'CREDIT_CARD';
+                let creditCard = undefined;
+                let creditCardHolderInfo = undefined;
+
+                if (paymentMethod === 'credit_card') {
+                    const [expMonth, expYear] = ccExpiry.includes('/') ? ccExpiry.split('/') : [ccExpiry.substring(0, 2), ccExpiry.substring(2, 4)];
+                    const formattedYear = expYear?.length === 2 ? `20${expYear}` : expYear;
+
+                    creditCard = {
+                        holderName: ccName,
+                        number: ccNumber.replace(/\D/g, ''),
+                        expiryMonth: expMonth,
+                        expiryYear: formattedYear,
+                        ccv: ccCvv
+                    };
+
+                    creditCardHolderInfo = {
+                        name: ccName,
+                        email: session.user.email || 'cliente@ggflabs.com',
+                        cpfCnpj: '00000000000', // Asaas expects CPF format. Adjust dynamically in production
+                        postalCode: '01310100',
+                        addressNumber: '1000',
+                        phone: '11999999999'
+                    };
+                }
+
+                console.log(`Generating ${billingType} for ride:`, rideData.id);
 
                 const { data: paymentRes, error: paymentError } = await supabase.functions.invoke('asaas-create-payment', {
                     body: {
                         rideId: rideData.id,
                         clienteId: session.user.id,
                         value: estimatedPrice,
-                        billingType: 'PIX',
-                        description: `GGF Pix - Corrida ${rideData.id.split('-')[0]}`
+                        billingType: billingType,
+                        description: `GGF ${billingType} - Corrida ${rideData.id.split('-')[0]}`,
+                        ...(paymentMethod === 'credit_card' ? { creditCard, creditCardHolderInfo } : {})
                     }
                 });
 
-                console.log('Payment invocation result:', { success: paymentRes?.success, error: paymentError });
-
                 if (paymentError || !paymentRes?.success) {
-                    console.error("Erro completo ao gerar Pix no mobile:", JSON.stringify(paymentError || paymentRes, null, 2));
-                    Alert.alert('Aviso', 'Falha ao gerar código Pix. Continuaremos buscando um motorista, mas o pagamento deverá ser resolvido depois.');
+                    console.error(`Erro completo ao gerar ${billingType} no mobile:`, JSON.stringify(paymentError || paymentRes, null, 2));
+                    Alert.alert('Aviso', `Falha ao processar pagamento via ${billingType}. Continuaremos buscando um motorista, mas o pagamento deverá ser resolvido depois.`);
                     router.replace('/(cliente)?searching=true');
                 } else {
-                    setPixData(paymentRes.pix);
-                    setIsPixModalVisible(true);
+                    if (paymentMethod === 'pix') {
+                        setPixData(paymentRes.pix);
+                        setIsPixModalVisible(true);
+                    } else {
+                        // Cartão Aprovado
+                        router.replace('/(cliente)?searching=true');
+                    }
                 }
             } else {
                 router.replace('/(cliente)?searching=true');

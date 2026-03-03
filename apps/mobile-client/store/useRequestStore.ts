@@ -6,6 +6,7 @@ export interface TowRequestDetails {
     marcaModelo: string;
     problemaDescricao: string;
     problemaTipo: string;
+    localRemocao: string;
 
     // Localização
     origem: any;

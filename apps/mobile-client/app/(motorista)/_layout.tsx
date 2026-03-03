@@ -95,6 +95,13 @@ export default function MotoristaLayout() {
                     tabBarStyle: { display: 'none' }
                 }}
             />
+            {/* Esconder a rota de avaliações das tabs */}
+            <Tabs.Screen
+                name="avaliacoes"
+                options={{
+                    href: null,
+                }}
+            />
         </Tabs>
     );
 }

@@ -4,7 +4,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { useAuth } from '../../src/contexts/AuthContext';
 import { supabase } from '../../src/lib/supabase';
-import { LogOut, User, Settings, Shield, HelpCircle, ChevronRight, Truck } from 'lucide-react-native';
+import { LogOut, User, Settings, Shield, HelpCircle, ChevronRight, Truck, Star } from 'lucide-react-native';
 
 export default function GuinchoProfileScreen() {
     const router = useRouter();
@@ -76,6 +76,7 @@ export default function GuinchoProfileScreen() {
                         onPress={() => router.push('/(motorista)/manage-vehicles')}
                     />
                     <MenuItem icon={Shield} title="Documentos e CNH" onPress={() => router.push('/(motorista)/manage-documents')} />
+                    <MenuItem icon={Star} title="Minhas Avaliações" onPress={() => router.push('/(motorista)/avaliacoes')} />
                 </View>
 
                 <Text style={styles.sectionTitle}>Configurações</Text>

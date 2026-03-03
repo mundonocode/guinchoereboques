@@ -4,7 +4,7 @@ import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
 import { createClient } from '@/utils/supabase/client';
-import { LogOut, User, Settings, Shield, HelpCircle, ChevronRight, Truck } from 'lucide-react';
+import { LogOut, User, Settings, Shield, HelpCircle, ChevronRight, Truck, Star } from 'lucide-react';
 import Link from 'next/link';
 
 export default function MotoristaProfilePage() {
@@ -98,6 +98,7 @@ export default function MotoristaProfilePage() {
                         <div className="bg-white rounded-[24px] shadow-sm border border-gray-100 overflow-hidden">
                             <MenuItem icon={Truck} title="Meus Veículos" href="/motorista/perfil/veiculos" />
                             <MenuItem icon={Shield} title="Documentos e CNH" href="/motorista/perfil/documentos" />
+                            <MenuItem icon={Star} title="Minhas Avaliações" href="/motorista/perfil/avaliacoes" />
                         </div>
                     </div>
 

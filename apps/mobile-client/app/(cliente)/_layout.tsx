@@ -65,6 +65,18 @@ export default function ClienteLayout() {
                 }}
             />
             <Tabs.Screen
+                name="vehicle-problem"
+                options={{
+                    href: null,
+                }}
+            />
+            <Tabs.Screen
+                name="location-type"
+                options={{
+                    href: null,
+                }}
+            />
+            <Tabs.Screen
                 name="request-payment"
                 options={{
                     href: null,

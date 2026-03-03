@@ -112,10 +112,52 @@ export function RidePaymentForm({
                 </button>
 
                 {paymentMethod === 'credit_card' && (
-                    <div className="bg-gray-50/80 p-5 rounded-2xl border border-gray-100 mt-2 text-center">
-                        <p className="text-[13px] font-medium text-gray-500">
-                            A maquininha será levada pelo motorista até o local do resgate.
-                        </p>
+                    <div className="bg-gray-50/80 p-5 rounded-2xl border border-gray-100 mt-2 space-y-4">
+                        <div>
+                            <label className="block text-[11px] font-bold text-gray-500 mb-1.5 tracking-wider">NÚMERO DO CARTÃO</label>
+                            <input
+                                type="text"
+                                value={ccNumber}
+                                onChange={(e) => setCcNumber(e.target.value)}
+                                placeholder="0000 0000 0000 0000"
+                                maxLength={19}
+                                className="w-full border border-gray-200 bg-white rounded-xl px-4 py-3 text-[14px] font-semibold outline-none focus:border-black transition-all"
+                            />
+                        </div>
+                        <div>
+                            <label className="block text-[11px] font-bold text-gray-500 mb-1.5 tracking-wider">NOME IMPRESSO NO CARTÃO</label>
+                            <input
+                                type="text"
+                                value={ccName}
+                                onChange={(e) => setCcName(e.target.value.toUpperCase())}
+                                placeholder="MARIA S SILVA"
+                                className="w-full border border-gray-200 bg-white rounded-xl px-4 py-3 text-[14px] font-semibold outline-none focus:border-black transition-all"
+                            />
+                        </div>
+                        <div className="flex gap-4">
+                            <div className="flex-1">
+                                <label className="block text-[11px] font-bold text-gray-500 mb-1.5 tracking-wider">VALIDADE</label>
+                                <input
+                                    type="text"
+                                    value={ccExpiry}
+                                    onChange={(e) => setCcExpiry(e.target.value)}
+                                    placeholder="MM/AA"
+                                    maxLength={5}
+                                    className="w-full border border-gray-200 bg-white rounded-xl px-4 py-3 text-[14px] font-semibold outline-none focus:border-black transition-all"
+                                />
+                            </div>
+                            <div className="flex-1">
+                                <label className="block text-[11px] font-bold text-gray-500 mb-1.5 tracking-wider">CVV</label>
+                                <input
+                                    type="text"
+                                    value={ccCvv}
+                                    onChange={(e) => setCcCvv(e.target.value)}
+                                    placeholder="123"
+                                    maxLength={4}
+                                    className="w-full border border-gray-200 bg-white rounded-xl px-4 py-3 text-[14px] font-semibold outline-none focus:border-black transition-all"
+                                />
+                            </div>
+                        </div>
                     </div>
                 )}
             </div>

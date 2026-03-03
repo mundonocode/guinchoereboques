@@ -12,22 +12,19 @@ export default function RequestDetailsScreen() {
     const [cor, setCor] = useState(requestDetails.cor || '');
     const [marcaModelo, setMarcaModelo] = useState(requestDetails.marcaModelo || '');
     const [problemaDescricao, setProblemaDescricao] = useState(requestDetails.problemaDescricao || '');
-    const [problemaTipo, setProblemaTipo] = useState(requestDetails.problemaTipo || '');
-
-    const problemTypes = ['Pane Mecânica', 'Colisão', 'Pneu Furado', 'Falta de Combustível'];
 
     const handleConfirm = () => {
         setRequestDetails({
+            ...requestDetails,
             placa,
             cor,
             marcaModelo,
             problemaDescricao,
-            problemaTipo
         });
         router.push('/(cliente)/request-payment');
     };
 
-    const isFormValid = placa && cor && marcaModelo && problemaTipo;
+    const isFormValid = placa && cor && marcaModelo;
 
     return (
         <SafeAreaView style={styles.safeArea}>
@@ -74,36 +71,16 @@ export default function RequestDetailsScreen() {
                 </View>
 
                 <View style={styles.inputGroup}>
-                    <Text style={styles.label}>DESCRIÇÃO DO PROBLEMA</Text>
+                    <Text style={styles.label}>DETALHES DA SITUAÇÃO (Opcional)</Text>
                     <TextInput
                         style={[styles.input, styles.textArea]}
-                        placeholder="Ex: O carro parou de funcionar do nada, fumaça no motor..."
+                        placeholder="Ex: O carro está em uma ladeira, tem fumaça no motor..."
                         value={problemaDescricao}
                         onChangeText={setProblemaDescricao}
                         multiline
                         numberOfLines={4}
                         textAlignVertical="top"
                     />
-                </View>
-
-                <View style={styles.chipsContainer}>
-                    {problemTypes.map((type) => (
-                        <TouchableOpacity
-                            key={type}
-                            style={[
-                                styles.chip,
-                                problemaTipo === type && styles.chipSelected
-                            ]}
-                            onPress={() => setProblemaTipo(type)}
-                        >
-                            <Text style={[
-                                styles.chipText,
-                                problemaTipo === type && styles.chipTextSelected
-                            ]}>
-                                {type}
-                            </Text>
-                        </TouchableOpacity>
-                    ))}
                 </View>
             </ScrollView>
 

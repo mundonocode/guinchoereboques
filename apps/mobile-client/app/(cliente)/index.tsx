@@ -12,6 +12,7 @@ import { useRequestStore } from '../../store/useRequestStore';
 import { supabase } from '../../src/lib/supabase';
 import ChatModal from '../../src/components/ChatModal';
 import CancellationModal from '../../src/components/CancellationModal';
+import RatingModal from '../../src/components/RatingModal';
 import * as Location from 'expo-location';
 
 const { width, height } = Dimensions.get('window');
@@ -38,6 +39,9 @@ export default function HomeScreen() {
     // Cancellation Modal state
     const [showCancellationModal, setShowCancellationModal] = useState(false);
     const [cancellationType, setCancellationType] = useState<'refunded' | 'cancelled_only'>('cancelled_only');
+
+    // Rating state
+    const [ratingData, setRatingData] = useState<{ corridaId: string, motoristaId: string, motoristaNome: string, motoristaAvatar: string } | null>(null);
 
     // UI state
     const [originAddressName, setOriginAddressName] = useState('Carregando...');
@@ -156,11 +160,14 @@ export default function HomeScreen() {
                         setRejectedDrivers(currentExcluded);
                         findAndAssignDriver(updatedRide.id, currentExcluded);
                     } else if (updatedRide.status === 'finalizada') {
-                        Alert.alert("Corrida Finalizada", "O reboque foi concluído com sucesso.");
-                        setRideState('idle');
-                        setCurrentRideId(null);
-                        setDriverInfo(null);
-                        router.replace('/(cliente)'); // Reset map
+                        // Present evaluation modal instead of simple alert
+                        setRatingData({
+                            corridaId: updatedRide.id,
+                            motoristaId: updatedRide.motorista_id,
+                            motoristaNome: driverInfo?.nome_completo || 'Guincheiro',
+                            motoristaAvatar: driverInfo?.foto_url || driverInfo?.avatar_url || ''
+                        });
+                        setRideState('idle'); // Tira do mapa
                     } else if (updatedRide.status === 'cancelada') {
                         Alert.alert("Corrida Cancelada", "O motorista cancelou o chamado.");
                         setRideState('idle');
@@ -270,12 +277,45 @@ export default function HomeScreen() {
             precoEstimado: 150 + (routeInfo.distance * 5)
         });
 
-        console.log('Pushing to: /(cliente)/request-details');
+        console.log('Pushing to: /(cliente)/vehicle-problem');
         try {
-            router.push('/(cliente)/request-details' as any);
+            router.push('/(cliente)/vehicle-problem' as any);
         } catch (err) {
             console.error('Error during routing:', err);
         }
+    };
+
+    const handleRatingSubmit = async (nota: number, comentario: string) => {
+        if (!ratingData || !session?.user?.id) return;
+
+        try {
+            const { error } = await supabase.from('avaliacoes').insert([{
+                avaliador_id: session.user.id,
+                avaliado_id: ratingData.motoristaId,
+                corrida_id: ratingData.corridaId,
+                nota: nota,
+                comentario: comentario
+            }]);
+
+            if (error) throw error;
+            Alert.alert("Sucesso", "Obrigado por avaliar!");
+        } catch (error) {
+            console.error('Error submitting rating:', error);
+            Alert.alert("Erro", "Não foi possível enviar a avaliação.");
+        } finally {
+            closeRatingAndReset();
+        }
+    };
+
+    const closeRatingAndReset = () => {
+        setRatingData(null);
+        setCurrentRideId(null);
+        setDriverInfo(null);
+        setStoreRideId(null);
+        resetRequestDetails();
+        // Clear expo router search params by navigating without them
+        router.replace({ pathname: '/(cliente)', params: {} } as any);
+        router.setParams({ searching: 'false', destinationLat: '', destinationLng: '', destinationAddress: '' });
     };
 
     if (loading) {
@@ -463,7 +503,9 @@ export default function HomeScreen() {
                                 setRideState('idle');
                                 setCurrentRideId(null);
                                 setStoreRideId(null);
-                                router.replace('/(cliente)');
+                                resetRequestDetails();
+                                router.replace({ pathname: '/(cliente)', params: {} } as any);
+                                router.setParams({ searching: 'false', destinationLat: '', destinationLng: '', destinationAddress: '' });
                             }
                         }}
                     >
@@ -583,7 +625,9 @@ export default function HomeScreen() {
                                                             setCurrentRideId(null);
                                                             setStoreRideId(null);
                                                             setDriverInfo(null);
-                                                            router.replace('/(cliente)');
+                                                            resetRequestDetails();
+                                                            router.replace({ pathname: '/(cliente)', params: {} } as any);
+                                                            router.setParams({ searching: 'false', destinationLat: '', destinationLng: '', destinationAddress: '' });
                                                         }
                                                     }
                                                 }
@@ -637,6 +681,21 @@ export default function HomeScreen() {
                 type={cancellationType}
                 onClose={() => setShowCancellationModal(false)}
             />
+
+            {/* Rating Modal Layer */}
+            {ratingData && (
+                <View style={[StyleSheet.absoluteFill, { zIndex: 10000, elevation: 10000 }]}>
+                    <RatingModal
+                        visible={!!ratingData}
+                        corridaId={ratingData.corridaId}
+                        motoristaId={ratingData.motoristaId}
+                        motoristaNome={ratingData.motoristaNome}
+                        motoristaAvatar={ratingData.motoristaAvatar}
+                        onSubmit={handleRatingSubmit}
+                        onSkip={closeRatingAndReset}
+                    />
+                </View>
+            )}
         </GestureHandlerRootView >
     );
 }
