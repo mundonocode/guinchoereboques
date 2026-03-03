@@ -73,13 +73,21 @@ export default function Dashboard() {
           novosClientes: `+${clientCount || 0}`
         });
 
-        setRecentRequests(requests?.map((r: any) => ({
-          id: `#${r.id.slice(0, 4)}`,
-          client: r.cliente?.nome_completo || 'N/A',
-          driver: r.motorista?.nome_completo || 'N/A',
-          value: new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(r.valor || 0),
-          status: (r.status || '').toUpperCase()
-        })) || []);
+        setRecentRequests(requests?.map((r: any) => {
+          const rawStatus = (r.status || 'pendente').toLowerCase();
+          let formattedStatus = rawStatus.charAt(0).toUpperCase() + rawStatus.slice(1);
+          if (rawStatus === 'a_caminho') formattedStatus = 'A Caminho';
+          if (rawStatus === 'no_local') formattedStatus = 'No Local';
+
+          return {
+            id: `#${r.id.slice(0, 4)}`,
+            client: r.cliente?.nome_completo || 'N/A',
+            driver: r.motorista?.nome_completo || 'N/A',
+            value: new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(r.valor || 0),
+            status: formattedStatus,
+            rawStatus: rawStatus
+          };
+        }) || []);
 
       } catch (error) {
         console.error('Error fetching dashboard data:', error);
@@ -148,8 +156,15 @@ export default function Dashboard() {
                       <td className="py-4 text-sm font-bold">{req.value}</td>
                       <td className="py-4">
                         <span className={cn(
-                          "text-[10px] font-bold px-2 py-1 rounded-md",
-                          req.status === 'CONCLUIDA' ? "bg-emerald-50 text-emerald-600" : "bg-blue-50 text-blue-600"
+                          "text-[10px] font-bold px-2 py-1 rounded-md whitespace-nowrap",
+                          req.rawStatus === 'pendente' && "bg-amber-50 text-amber-600",
+                          req.rawStatus === 'aceita' && "bg-blue-50 text-blue-600",
+                          req.rawStatus === 'a_caminho' && "bg-indigo-50 text-indigo-600",
+                          req.rawStatus === 'no_local' && "bg-purple-50 text-purple-600",
+                          req.rawStatus === 'iniciada' && "bg-cyan-50 text-cyan-600",
+                          (req.rawStatus === 'finalizada' || req.rawStatus === 'concluida') && "bg-emerald-50 text-emerald-600",
+                          req.rawStatus === 'cancelada' && "bg-red-50 text-red-600",
+                          !['pendente', 'aceita', 'a_caminho', 'no_local', 'iniciada', 'finalizada', 'concluida', 'cancelada'].includes(req.rawStatus) && "bg-gray-50 text-gray-600"
                         )}>
                           {req.status}
                         </span>
