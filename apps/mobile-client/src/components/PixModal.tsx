@@ -88,7 +88,13 @@ export default function PixModal({ visible, onClose, onVerify, isVerifying, pixD
 
                         <TouchableOpacity
                             style={[styles.confirmButton, isVerifying && { opacity: 0.7 }]}
-                            onPress={onVerify || onClose}
+                            onPress={() => {
+                                if (onVerify) {
+                                    onVerify();
+                                } else {
+                                    onClose();
+                                }
+                            }}
                             disabled={isVerifying}
                         >
                             {isVerifying ? (

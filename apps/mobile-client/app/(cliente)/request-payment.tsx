@@ -58,24 +58,40 @@ export default function RequestPaymentScreen() {
     }, [isPixModalVisible, currentRideId]);
 
     const handleVerifyPayment = async () => {
-        if (!currentRideId) return;
+        if (!currentRideId) {
+            console.log('No current ride ID.');
+            return;
+        }
+
         setIsVerifyingPayment(true);
+        console.log('Manual verify for ride:', currentRideId);
+
         try {
-            console.log('Manual verify for ride:', currentRideId);
             const { data, error } = await supabase.functions.invoke('asaas-check-payment', {
                 body: { rideId: currentRideId }
             });
 
+            console.log('Edge function response:', { data, error });
+
             if (error) {
                 console.error("Error from edge function:", error);
-                Alert.alert("Aviso", "Não foi possível verificar o pagamento neste momento.");
+                Alert.alert("Aviso", "Não foi possível verificar o pagamento neste momento. Tente novamente.");
+                return;
+            }
+
+            // A função retorna { success: true, asaas_status: "MATCH", ride_status: "MATCH" } ou um erro no JSON
+            if (data?.error) {
+                console.error("Edge function returned error payload:", data.error);
+                Alert.alert("Erro", data.error);
                 return;
             }
 
             if (data?.ride_status === 'buscando_motorista') {
+                console.log('Payment confirmed! Navigating to searching...');
                 setIsPixModalVisible(false);
                 router.replace('/(cliente)?searching=true');
             } else {
+                console.log('Payment NOT confirmed yet. Status:', data?.asaas_status);
                 Alert.alert(
                     "Pagamento Pendente",
                     "O Asaas ainda não confirmou o recebimento deste Pix.\nPode levar alguns segundos. Aguarde ou feche para continuar."
