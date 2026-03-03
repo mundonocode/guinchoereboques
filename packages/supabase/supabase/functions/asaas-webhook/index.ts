@@ -15,11 +15,22 @@ serve(async (req: Request) => {
     }
 
     try {
+        // Initialize Supabase Admin Client
+        const supabaseAdmin = createClient(
+            Deno.env.get("SUPABASE_URL") ?? "",
+            Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? ""
+        );
+
         // Security: Verify Asaas Access Token
         const asaasToken = req.headers.get("asaas-access-token");
-        // In a production environment, you should store this token in Supabase Secrets
-        // and fetch it using Deno.env.get("ASAAS_WEBHOOK_TOKEN")
-        const EXPECTED_TOKEN = "whsec_Kkdw0CE8NU-m7fgbRMWZDbJltH3T-aG6WycEpGukxiQ";
+
+        // Fetch Webhook Token from Settings
+        const { data: config } = await supabaseAdmin
+            .from("configuracoes")
+            .select("asaas_webhook_token")
+            .single();
+
+        const EXPECTED_TOKEN = config?.asaas_webhook_token || "whsec_Kkdw0CE8NU-m7fgbRMWZDbJltH3T-aG6WycEpGukxiQ";
 
         if (asaasToken !== EXPECTED_TOKEN) {
             console.error("Unauthorized webhook attempt. Invalid token.");
@@ -49,11 +60,6 @@ serve(async (req: Request) => {
             });
         }
 
-        // Initialize Supabase Admin Client
-        const supabaseAdmin = createClient(
-            Deno.env.get("SUPABASE_URL") ?? "",
-            Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? ""
-        );
 
         // 1. Update the 'corridas' table based on the Asaas payment ID
         const { data: rideData, error: rideError } = await supabaseAdmin
