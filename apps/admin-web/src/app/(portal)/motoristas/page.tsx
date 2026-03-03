@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useEffect, useState, useRef } from 'react';
-import { Search, Plus, Star, Settings, Bell, Upload, AlertCircle, CheckCircle2, Building2, User } from 'lucide-react';
+import { Search, Plus, Star, Settings, Bell, Upload, AlertCircle, CheckCircle2, Building2, User, X, Eye } from 'lucide-react';
 import * as XLSX from 'xlsx';
 import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
@@ -9,6 +9,24 @@ import { supabase } from '@/lib/supabase';
 
 function cn(...inputs: ClassValue[]) {
     return twMerge(clsx(inputs));
+}
+
+interface PreviewRow {
+    data: Record<string, any>;
+    errors: string[];
+    isValid: boolean;
+}
+
+const REQUIRED_FIELDS = ['nome_completo', 'email', 'senha'];
+
+function validateRow(row: Record<string, any>): string[] {
+    const errors: string[] = [];
+    if (!row.nome_completo?.toString().trim()) errors.push('Nome completo obrigatório');
+    if (!row.email?.toString().trim()) errors.push('Email obrigatório');
+    else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(row.email.toString().trim())) errors.push('Email inválido');
+    if (!row.senha?.toString().trim()) errors.push('Senha obrigatória');
+    else if (row.senha.toString().trim().length < 6) errors.push('Senha deve ter no mínimo 6 caracteres');
+    return errors;
 }
 
 export default function MotoristasPage() {
@@ -19,6 +37,12 @@ export default function MotoristasPage() {
     const [uploading, setUploading] = useState(false);
     const [uploadResult, setUploadResult] = useState<{ successful: number, failed: number, errors: any[] } | null>(null);
     const fileInputRef = useRef<HTMLInputElement>(null);
+
+    // Preview state
+    const [previewData, setPreviewData] = useState<PreviewRow[]>([]);
+    const [previewColumns, setPreviewColumns] = useState<string[]>([]);
+    const [showPreview, setShowPreview] = useState(false);
+    const [rawJsonData, setRawJsonData] = useState<any[]>([]);
 
     const fetchData = async () => {
         setLoading(true);
@@ -47,7 +71,7 @@ export default function MotoristasPage() {
                     name: m.nome_completo,
                     vehicle: m.veiculos_guincho ? `${(m.veiculos_guincho as any).marca_modelo} (${(m.veiculos_guincho as any).placa})` : 'Sem Veículo',
                     doc: (m.veiculos_guincho as any)?.documento_url ? 'Aprovado' : 'Pendente',
-                    rating: 5.0, // Placeholder
+                    rating: 5.0,
                     status: (m.veiculos_guincho as any)?.status || 'Offline',
                     avatar: m.foto_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(m.nome_completo)}&background=random`
                 })));
@@ -83,16 +107,14 @@ export default function MotoristasPage() {
         fetchData();
     }, [activeTab]);
 
+    // Step 1: Parse file and show preview
     const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
         if (!file) return;
 
-        setUploading(true);
-        setUploadResult(null);
-
         try {
             const reader = new FileReader();
-            reader.onload = async (evt) => {
+            reader.onload = (evt) => {
                 try {
                     const data = new Uint8Array(evt.target?.result as ArrayBuffer);
                     const workbook = XLSX.read(data, { type: 'array' });
@@ -102,47 +124,75 @@ export default function MotoristasPage() {
 
                     if (!jsonData || jsonData.length === 0) {
                         alert("Planilha vazia ou formato inválido.");
-                        setUploading(false);
                         return;
                     }
 
-                    const { data: { session } } = await supabase.auth.getSession();
-                    if (!session) throw new Error("Não autenticado");
+                    // Get all columns from the first row
+                    const allColumns = Object.keys(jsonData[0] as object);
+                    setPreviewColumns(allColumns);
+                    setRawJsonData(jsonData);
 
-                    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-                    const res = await fetch(`${supabaseUrl}/functions/v1/create-users-batch`, {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                            'Authorization': `Bearer ${session.access_token}`
-                        },
-                        body: JSON.stringify({ users: jsonData })
+                    // Validate each row
+                    const rows: PreviewRow[] = jsonData.map((row: any) => {
+                        const errors = validateRow(row);
+                        return { data: row, errors, isValid: errors.length === 0 };
                     });
 
-                    const result = await res.json();
-                    setUploadResult(result);
-
-                    if (res.ok && result.successful > 0) {
-                        await fetchData();
-                    }
+                    setPreviewData(rows);
+                    setShowPreview(true);
+                    setUploadResult(null);
                 } catch (error: any) {
                     console.error("Erro no processamento da planilha:", error);
                     alert("Erro ao processar planilha: " + error.message);
-                } finally {
-                    setUploading(false);
-                    if (fileInputRef.current) {
-                        fileInputRef.current.value = "";
-                    }
                 }
             };
-            reader.onerror = () => {
-                alert("Erro ao ler o arquivo.");
-                setUploading(false);
-            };
+            reader.onerror = () => alert("Erro ao ler o arquivo.");
             reader.readAsArrayBuffer(file);
         } catch (err: any) {
             console.error("Erro no upload", err);
+        } finally {
+            if (fileInputRef.current) fileInputRef.current.value = "";
+        }
+    };
+
+    // Step 2: Confirm and send to edge function
+    const confirmUpload = async () => {
+        const validRows = previewData.filter(r => r.isValid).map(r => r.data);
+        if (validRows.length === 0) {
+            alert("Nenhuma linha válida para enviar.");
+            return;
+        }
+
+        setUploading(true);
+        setShowPreview(false);
+
+        try {
+            const { data: { session } } = await supabase.auth.getSession();
+            if (!session) throw new Error("Não autenticado");
+
+            const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+            const res = await fetch(`${supabaseUrl}/functions/v1/create-users-batch`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${session.access_token}`
+                },
+                body: JSON.stringify({ users: validRows })
+            });
+
+            const result = await res.json();
+            setUploadResult(result);
+
+            if (res.ok && result.successful > 0) {
+                await fetchData();
+            }
+        } catch (error: any) {
+            console.error("Erro no envio:", error);
+            alert("Erro ao enviar dados: " + error.message);
+        } finally {
             setUploading(false);
+            setPreviewData([]);
+            setRawJsonData([]);
         }
     };
 

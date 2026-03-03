@@ -109,7 +109,7 @@ export default function LandingPage() {
                 </section>
 
                 {/* WHY CHOOSE US GRID */}
-                <section className="py-24 px-6 md:px-12 bg-[#F8F9FA]">
+                <section id="para-usuarios" className="py-24 px-6 md:px-12 bg-[#F8F9FA]">
                     <motion.div
                         initial={{ opacity: 0, y: 20 }}
                         whileInView={{ opacity: 1, y: 0 }}
@@ -266,13 +266,8 @@ export default function LandingPage() {
                 <section className="py-24 px-6 md:px-12 bg-white">
                     <div className="max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-16 md:gap-24 items-start">
                         {/* Logo Block */}
-                        <div className="flex flex-col items-center justify-center p-8 bg-[#F8F9FA] rounded-[2rem] aspect-square md:aspect-auto md:h-full min-h-[300px]">
-                            <img src="/tow-truck-icon.png" className="w-[120px] h-auto mb-6" alt="Icon Truck" />
-                            <div className="text-center">
-                                <h3 className="text-[32px] font-poppins font-bold text-black leading-tight">
-                                    Guinchos <br /> e Reboques
-                                </h3>
-                            </div>
+                        <div className="flex flex-col items-center justify-center p-8 bg-white rounded-[2rem] aspect-square md:aspect-auto md:h-full min-h-[300px]">
+                            <img src="/logo-guinchos-reboques.png" className="w-[220px] h-auto" alt="Guinchos e Reboques" />
                         </div>
 
                         {/* CTA Block */}
@@ -309,15 +304,15 @@ export default function LandingPage() {
                             <p className="text-[16px] font-inter font-normal text-zinc-500 leading-relaxed">
                                 Guinchos e Reboques faz o trabalho duro para você. Baixe nosso aplicativo gratuito na Google Play ou App Store e solicite guincho pela web. Chegamos para te proporcionar toda a comodidade que você precisa no momento mais inoportuno. Através tecnologia de ponta para realizar serviço de guincho. Você pode pagar com cartão de crédito/débito e pix pelo aplicativo.
                             </p>
-                            <a href="#" className="inline-flex items-center gap-2 text-black font-bold text-sm tracking-widest uppercase hover:underline">
-                                BAIXAR APP →
-                            </a>
+                            <Link href="/login" className="inline-flex items-center gap-2 text-black font-bold text-sm tracking-widest uppercase hover:underline">
+                                SOLICITAR AGORA →
+                            </Link>
                         </div>
 
                         {/* Service Image Block */}
-                        <div className="relative overflow-hidden rounded-[2rem] shadow-xl">
+                        <div className="relative overflow-hidden" style={{ borderRadius: '2rem 0 2rem 0' }}>
                             <img
-                                src="/feature-2.png"
+                                src="/service-tow-truck.png"
                                 alt="Caminhão de resgate carregando carro"
                                 className="w-full h-full object-cover min-h-[300px]"
                             />

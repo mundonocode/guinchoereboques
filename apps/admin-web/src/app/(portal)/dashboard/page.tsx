@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
-import { DollarSign, Car, Truck, Users, UserPlus, Bell, Info, AlertCircle } from 'lucide-react';
+import { DollarSign, Car, Truck, Users, UserPlus, Bell, Info, AlertCircle, Activity, CreditCard, XCircle, UserCheck } from 'lucide-react';
 import { StatCard } from '@/components/StatCard';
 import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
@@ -9,6 +9,12 @@ import { supabase } from '@/lib/supabase';
 
 function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
+}
+
+interface SystemAlert {
+  title: string;
+  desc: string;
+  bg: string;
 }
 
 export default function Dashboard() {
@@ -19,12 +25,17 @@ export default function Dashboard() {
     novosClientes: '+0'
   });
   const [recentRequests, setRecentRequests] = useState<any[]>([]);
+  const [systemAlerts, setSystemAlerts] = useState<SystemAlert[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     async function fetchDashboardData() {
       setLoading(true);
       try {
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        const todayISO = today.toISOString();
+
         // 1. Faturamento Total
         const { data: allFinalizedRides } = await (supabase
           .from('corridas' as any)
@@ -34,12 +45,10 @@ export default function Dashboard() {
         const total = allFinalizedRides?.reduce((acc: number, curr: any) => acc + (curr.valor || 0), 0) || 0;
 
         // 2. Corridas Hoje
-        const today = new Date();
-        today.setHours(0, 0, 0, 0);
         const { count: todayRides } = await (supabase
           .from('corridas' as any)
           .select('*', { count: 'exact', head: true }) as any)
-          .gte('created_at', today.toISOString());
+          .gte('created_at', todayISO);
 
         // 3. Motoristas Online
         const { count: onlineDrivers } = await supabase
@@ -89,6 +98,73 @@ export default function Dashboard() {
           };
         }) || []);
 
+        // === ALERTAS DINÂMICOS ===
+        const alerts: SystemAlert[] = [];
+
+        // A) Corridas canceladas hoje
+        const { count: cancelledToday } = await (supabase
+          .from('corridas' as any)
+          .select('*', { count: 'exact', head: true }) as any)
+          .eq('status', 'cancelada')
+          .gte('created_at', todayISO);
+        if (cancelledToday && cancelledToday > 0) {
+          alerts.push({ title: 'Corridas Canceladas Hoje', desc: `${cancelledToday} corrida(s) cancelada(s) hoje`, bg: 'bg-red-100' });
+        }
+
+        // B) Pagamentos pendentes/falhos
+        const { count: pendingPayments } = await (supabase
+          .from('corridas' as any)
+          .select('*', { count: 'exact', head: true }) as any)
+          .not('asaas_payment_id', 'is', null)
+          .not('asaas_payment_status', 'in', '("CONFIRMED","RECEIVED","RECEIVED_IN_CASH")');
+        if (pendingPayments && pendingPayments > 0) {
+          alerts.push({ title: 'Pagamentos Pendentes', desc: `${pendingPayments} pagamento(s) aguardando confirmação`, bg: 'bg-red-100' });
+        }
+
+        // C) Corridas em andamento agora
+        const { count: activeRides } = await (supabase
+          .from('corridas' as any)
+          .select('*', { count: 'exact', head: true }) as any)
+          .in('status', ['a_caminho', 'no_local', 'em_andamento', 'buscando_motorista']);
+        if (activeRides && activeRides > 0) {
+          alerts.push({ title: 'Corridas Ativas Agora', desc: `${activeRides} corrida(s) em andamento`, bg: 'bg-blue-100' });
+        }
+
+        // D) Novos clientes hoje
+        const { count: newClientsToday } = await supabase
+          .from('perfis')
+          .select('*', { count: 'exact', head: true })
+          .eq('role', 'cliente')
+          .gte('created_at', todayISO);
+        if (newClientsToday && newClientsToday > 0) {
+          alerts.push({ title: 'Novos Clientes Hoje', desc: `${newClientsToday} novo(s) cliente(s) cadastrado(s)`, bg: 'bg-blue-100' });
+        }
+
+        // E) Motoristas offline (não online)
+        const { count: offlineDrivers } = await supabase
+          .from('veiculos_guincho')
+          .select('*', { count: 'exact', head: true })
+          .neq('status', 'Online');
+        if (offlineDrivers && offlineDrivers > 0) {
+          alerts.push({ title: 'Guincheiros Offline', desc: `${offlineDrivers} guincheiro(s) offline`, bg: 'bg-amber-100' });
+        }
+
+        // F) Motoristas pendentes de aprovação
+        const { count: pendingDrivers } = await supabase
+          .from('perfis')
+          .select('*', { count: 'exact', head: true })
+          .eq('role', 'motorista')
+          .eq('aprovado', false);
+        if (pendingDrivers && pendingDrivers > 0) {
+          alerts.push({ title: 'Guincheiros Pendentes', desc: `${pendingDrivers} guincheiro(s) aguardando aprovação`, bg: 'bg-amber-100' });
+        }
+
+        if (alerts.length === 0) {
+          alerts.push({ title: 'Tudo certo!', desc: 'Nenhum alerta no momento', bg: 'bg-blue-100' });
+        }
+
+        setSystemAlerts(alerts);
+
       } catch (error) {
         console.error('Error fetching dashboard data:', error);
       } finally {
@@ -98,12 +174,6 @@ export default function Dashboard() {
 
     fetchDashboardData();
   }, []);
-
-  const systemAlerts = [
-    { title: 'Documento Pendente', desc: 'Guincheiro Marcos P. enviou CNH', icon: Info, color: '#F59E0B', bg: 'bg-amber-100' },
-    { title: 'Novo Cadastro', desc: 'Guincho S.A solicitou parceria', icon: UserPlus, color: '#3B82F6', bg: 'bg-blue-100' },
-    { title: 'Reclamação', desc: 'Cliente #829 reportou atraso', icon: AlertCircle, color: '#EF4444', bg: 'bg-red-100' },
-  ];
 
   return (
     <div className="p-10 space-y-10">

@@ -76,9 +76,13 @@ export default function ParaEmpresasPage() {
         <div className="min-h-screen bg-white font-sans selection:bg-amber-500 selection:text-black">
             <LandingHeader />
 
-            <main>
+            <motion.main
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ duration: 0.8 }}
+            >
                 {/* HERO SECTION */}
-                <section className="relative pt-24 pb-32 px-6 md:px-12 bg-white flex flex-col items-center overflow-hidden">
+                <section id="para-empresas" className="relative pt-24 pb-32 px-6 md:px-12 bg-white flex flex-col items-center overflow-hidden">
                     <div className="max-w-[75rem] mx-auto w-full flex flex-col items-center text-center space-y-8">
                         {/* Top Badge */}
                         <div className="inline-flex items-center rounded-full border border-gray-200 bg-white p-1 mb-2 shadow-sm w-fit">
@@ -204,7 +208,7 @@ export default function ParaEmpresasPage() {
                         </div>
                     </div>
                 </section>
-            </main>
+            </motion.main>
 
             <LandingFooter />
         </div>

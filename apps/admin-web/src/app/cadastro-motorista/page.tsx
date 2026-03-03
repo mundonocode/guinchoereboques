@@ -1,14 +1,12 @@
+'use client';
+
 import React from 'react';
 import { LandingHeader } from '@/components/landing/LandingHeader';
 import { LandingFooter } from '@/components/landing/LandingFooter';
 import { Accordion } from '@/components/landing/Accordion';
 import { Check, ArrowRight, Zap, Award, Download, Truck } from 'lucide-react';
 import Link from 'next/link';
-
-export const metadata = {
-    title: 'Cadastro de Motorista | Guinchos e Reboques',
-    description: 'Pare de buscar clientes. Aumente seu faturamento conectando-se à nossa rede de clientes e empresas.',
-};
+import { motion } from 'framer-motion';
 
 export default function CadastroMotoristaPage() {
     const faqs = [
@@ -34,17 +32,21 @@ export default function CadastroMotoristaPage() {
         <div className="min-h-screen bg-white font-sans selection:bg-amber-500 selection:text-black">
             <LandingHeader />
 
-            <main>
+            <motion.main
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ duration: 0.8 }}
+            >
                 {/* HERO SECTION */}
-                <section className="relative pt-24 pb-32 px-6 md:px-12 bg-white flex flex-col items-center overflow-hidden">
+                <section className="relative pt-12 pb-20 px-6 md:px-12 bg-white flex flex-col items-center overflow-hidden">
                     <div className="max-w-[75rem] mx-auto w-full grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-16 items-center">
                         <div className="space-y-5 relative z-10 w-full max-w-2xl mx-auto lg:mx-0">
                             {/* Top Badge */}
-                            <div className="inline-flex items-center rounded-full border border-gray-200 bg-white p-1 mb-2">
+                            <div className="inline-flex items-center rounded-full border border-gray-200 bg-white p-1 mb-2 shadow-sm w-fit">
                                 <span className="bg-[#F59E0B] text-white px-4 py-1.5 rounded-full text-sm font-bold">
                                     Guinchos e Reboques
                                 </span>
-                                <span className="px-4 py-1.5 text-black text-sm font-medium flex items-center gap-2">
+                                <span className="px-4 py-1.5 text-black text-[13px] font-semibold flex items-center gap-2">
                                     Para Profissionais
                                     <ArrowRight size={16} className="text-gray-400" />
                                 </span>
@@ -55,7 +57,7 @@ export default function CadastroMotoristaPage() {
                                 Deixe eles encontrarem você
                             </h1>
 
-                            <p className="text-[15px] text-zinc-500 font-normal leading-relaxed max-w-lg mb-2">
+                            <p className="text-[15px] text-zinc-500 font-medium leading-relaxed max-w-lg mb-2">
                                 Nossa plataforma conecta você a milhares de motoristas que
                                 precisam dos seus serviços, enquanto você mantém autonomia
                                 total sobre sua agenda.
@@ -75,11 +77,11 @@ export default function CadastroMotoristaPage() {
                             </div>
                         </div>
 
-                        <div className="relative w-full aspect-square lg:aspect-auto lg:h-[600px] flex justify-center lg:justify-end mt-8 lg:mt-0">
+                        <div className="relative w-full flex justify-center lg:justify-end mt-8 lg:mt-0">
                             <img
-                                src="/hero-driver-new.png"
+                                src="/hero-driver-cartoon.png"
                                 alt="Motorista de guincho satisfeito"
-                                className="w-full h-full max-w-[550px] max-h-[496px] object-cover rounded-tl-[4.5rem] rounded-br-[4.5rem] rounded-tr-[1.2rem] rounded-bl-[1.2rem] shadow-xl"
+                                className="w-full h-auto max-w-[500px] object-contain drop-shadow-2xl"
                             />
                         </div>
                     </div>
@@ -249,7 +251,7 @@ export default function CadastroMotoristaPage() {
                         </div>
                     </div>
                 </section>
-            </main>
+            </motion.main>
 
             <LandingFooter />
         </div>

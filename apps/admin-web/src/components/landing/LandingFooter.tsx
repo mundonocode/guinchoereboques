@@ -1,16 +1,25 @@
+'use client';
+
 import React from 'react';
 import Link from 'next/link';
+import { usePathname } from 'next/navigation';
 import { Instagram, Facebook } from 'lucide-react';
 
 export function LandingFooter() {
+    const pathname = usePathname();
+
+    const isHome = pathname === '/';
+    const isMotorista = pathname === '/cadastro-motorista';
+    const isEmpresas = pathname === '/para-empresas';
+
     return (
         <footer className="w-full bg-black text-white pt-24 pb-8 px-6 md:px-12 border-t border-zinc-900">
             <div className="max-w-6xl mx-auto flex flex-col md:flex-row justify-between gap-16 mb-20">
                 {/* Brand & Description */}
                 <div className="flex-1 max-w-sm space-y-6">
-                    <div className="flex flex-col">
+                    <Link href="/" className="flex flex-col w-fit">
                         <img src="/footer-logo.png" alt="Guinchos e Reboques" className="h-16 w-auto object-contain object-left mb-2" />
-                    </div>
+                    </Link>
                     <p className="text-[13px] font-medium text-white/70 leading-relaxed">
                         Com tecnologia avançada, profissionais credenciados e atendimento 24h, conectamos você à melhor solução de forma rápida e segura, sem burocracias.
                     </p>
@@ -20,10 +29,31 @@ export function LandingFooter() {
                 <div className="flex-1 max-w-[200px] space-y-6">
                     <h4 className="text-[16px] font-bold text-white tracking-tight">Links úteis</h4>
                     <ul className="space-y-4 text-[13px] font-medium text-white/50">
-                        <li><Link href="#para-usuarios" className="hover:text-amber-500 transition-colors">Para Usuários</Link></li>
-                        <li><Link href="#para-profissionais" className="hover:text-amber-500 transition-colors">Para Profissionais</Link></li>
-                        <li><Link href="#para-empresas" className="hover:text-amber-500 transition-colors">Para Empresas</Link></li>
-                        <li><Link href="/privacidade" className="hover:text-amber-500 transition-colors border-b border-white/50 pb-0.5 inline-block hover:border-amber-500">Política de Privacidade</Link></li>
+                        <li>
+                            <Link
+                                href={isHome ? "#para-usuarios" : "/#para-usuarios"}
+                                className="hover:text-amber-500 transition-colors"
+                            >
+                                Para Usuários
+                            </Link>
+                        </li>
+                        <li>
+                            <Link
+                                href={isMotorista ? "#" : "/cadastro-motorista"}
+                                className="hover:text-amber-500 transition-colors"
+                            >
+                                Para Profissionais
+                            </Link>
+                        </li>
+                        <li>
+                            <Link
+                                href={isEmpresas ? "#" : "/para-empresas"}
+                                className="hover:text-amber-500 transition-colors"
+                            >
+                                Para Empresas
+                            </Link>
+                        </li>
+                        <li><Link href="#faq" className="hover:text-amber-500 transition-colors border-b border-white/50 pb-0.5 inline-block hover:border-amber-500">Política de Privacidade</Link></li>
                     </ul>
                 </div>
 

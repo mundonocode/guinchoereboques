@@ -1,8 +1,17 @@
+'use client';
+
 import React from 'react';
 import Link from 'next/link';
+import { usePathname } from 'next/navigation';
 import { Truck } from 'lucide-react';
 
 export function LandingHeader() {
+    const pathname = usePathname();
+
+    const isHome = pathname === '/';
+    const isMotorista = pathname === '/cadastro-motorista';
+    const isEmpresas = pathname === '/para-empresas';
+
     return (
         <header className="w-full bg-black text-white py-4 px-6 md:px-12 flex items-center justify-between z-50 relative">
             <Link href="/" className="flex items-center gap-3 group">
@@ -10,9 +19,24 @@ export function LandingHeader() {
             </Link>
 
             <nav className="hidden lg:flex items-center gap-10 text-[15px] font-bold tracking-wide text-white/90">
-                <Link href="#para-usuarios" className="hover:text-amber-400 transition-colors">Para Usuários</Link>
-                <Link href="#para-profissionais" className="hover:text-amber-400 transition-colors">Para Profissionais</Link>
-                <Link href="#para-empresas" className="hover:text-amber-400 transition-colors">Para Empresas</Link>
+                <Link
+                    href={isHome ? "#para-usuarios" : "/#para-usuarios"}
+                    className="hover:text-amber-400 transition-colors"
+                >
+                    Para Usuários
+                </Link>
+                <Link
+                    href={isMotorista ? "#" : "/cadastro-motorista"}
+                    className="hover:text-amber-400 transition-colors"
+                >
+                    Para Profissionais
+                </Link>
+                <Link
+                    href={isEmpresas ? "#" : "/para-empresas"}
+                    className="hover:text-amber-400 transition-colors"
+                >
+                    Para Empresas
+                </Link>
                 <Link href="#faq" className="hover:text-amber-400 transition-colors">FAQ</Link>
             </nav>
 
