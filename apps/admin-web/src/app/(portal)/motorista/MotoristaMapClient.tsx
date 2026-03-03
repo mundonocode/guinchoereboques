@@ -66,7 +66,7 @@ export function MotoristaMapClient() {
                     errorMsg = "Tempo limite atingido ao obter localização.";
                     break;
             }
-            console.error("Erro GPS:", error.code, errorMsg, error.message);
+            console.warn("Erro GPS (Aviso):", error.code, errorMsg, error.message);
             if (!location) setLocation(DEFAULT_CENTER);
         };
 

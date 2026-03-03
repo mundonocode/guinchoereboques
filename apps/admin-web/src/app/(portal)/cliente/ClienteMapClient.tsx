@@ -155,7 +155,12 @@ export function ClienteMapClient() {
 
                     setOriginAddressName(errorMsg);
                     setLocation(DEFAULT_CENTER);
-                }
+                    if (map && !destination) {
+                        map.panTo(DEFAULT_CENTER);
+                        map.setZoom(13);
+                    }
+                },
+                { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
             );
         } else {
             setLocation(DEFAULT_CENTER);
@@ -477,9 +482,10 @@ export function ClienteMapClient() {
                     .single();
 
                 // Se foi pago via Pix e o status no Asaas indica que já recebemos o dinheiro
-                if (rideData?.asaas_payment_id &&
-                    rideData.forma_pagamento === 'pix' &&
-                    (rideData.asaas_payment_status === 'RECEIVED' || rideData.asaas_payment_status === 'CONFIRMED')) {
+                const rData: any = rideData;
+                if (rData?.asaas_payment_id &&
+                    rData.forma_pagamento === 'pix' &&
+                    (rData.asaas_payment_status === 'RECEIVED' || rData.asaas_payment_status === 'CONFIRMED')) {
 
                     console.log("DEBUG: Triggering automatic refund for Pix payment...");
                     try {
