@@ -77,7 +77,6 @@ export default function PrivacyPolicyScreen() {
 
                 <Text style={styles.footerText}>
                     Ao utilizar este aplicativo, você concorda expressamente com esta Política de Privacidade.
-                </Text>r este aplicativo, você concorda expressamente com os termos da Guinchos e Reboque.
                 </Text>
             </ScrollView>
         </SafeAreaView>
