@@ -34,7 +34,7 @@ export default function ConfiguraçõesPage() {
         async function fetchConfig() {
             try {
                 console.log("ConfiguraçõesPage: Chamando Supabase...");
-                const { data, error } = await supabase
+                const { data, error } = await (supabase as any)
                     .from('configuracoes')
                     .select('*')
                     .limit(1)
@@ -89,7 +89,7 @@ export default function ConfiguraçõesPage() {
         setIsSaving(true);
         try {
             if (configId) {
-                await supabase
+                await (supabase as any)
                     .from('configuracoes')
                     .update({
                         split_percentage: config.split_percentage,
@@ -104,7 +104,7 @@ export default function ConfiguraçõesPage() {
                     })
                     .eq('id', configId);
             } else {
-                const { data } = await supabase
+                const { data } = await (supabase as any)
                     .from('configuracoes')
                     .insert([{
                         split_percentage: config.split_percentage,
@@ -214,13 +214,19 @@ export default function ConfiguraçõesPage() {
                                 <h4 className="text-sm font-bold text-gray-900 mb-1">Status do Split Dev</h4>
                                 <p className="text-[11px] text-muted font-medium">Ativa ou desativa o repasse de 5% para a conta dev</p>
                             </div>
-                            <input
-                                type="checkbox"
-                                name="dev_split_enabled"
-                                checked={config.dev_split_enabled}
-                                onChange={handleChange}
-                                className="w-6 h-6 rounded border-border"
-                            />
+                            <div className="flex flex-col items-end gap-1">
+                                <input
+                                    type="checkbox"
+                                    name="dev_split_enabled"
+                                    checked={config.dev_split_enabled}
+                                    onChange={handleChange}
+                                    disabled={config.dev_cumulative_revenue < config.dev_revenue_limit}
+                                    className={`w-6 h-6 rounded border-border ${config.dev_cumulative_revenue < config.dev_revenue_limit ? 'cursor-not-allowed opacity-50' : 'cursor-pointer'}`}
+                                />
+                                {config.dev_cumulative_revenue < config.dev_revenue_limit && (
+                                    <span className="text-[9px] text-orange-600 font-bold uppercase tracking-tight">Bloqueado até R$ 50k</span>
+                                )}
+                            </div>
                         </div>
 
                         <div className="grid grid-cols-2 gap-8">
