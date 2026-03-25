@@ -7,10 +7,11 @@ import { supabase } from '../../src/lib/supabase';
 import { useAuth } from '../../src/contexts/AuthContext';
 import * as Location from 'expo-location';
 import PixModal from '../../src/components/PixModal';
+import { formatCardNumber, formatCardExpiry, formatCVV } from '../../src/utils/paymentUtils';
 
 export default function RequestPaymentScreen() {
     const router = useRouter();
-    const { session } = useAuth();
+    const { session, cpf, telefone } = useAuth();
     const { requestDetails, currentRideId, setCurrentRideId, resetRequestDetails } = useRequestStore();
 
     const [paymentMethod, setPaymentMethod] = useState<'credit_card' | 'pix'>('pix');
@@ -21,6 +22,8 @@ export default function RequestPaymentScreen() {
     const [ccName, setCcName] = useState('');
     const [ccExpiry, setCcExpiry] = useState('');
     const [ccCvv, setCcCvv] = useState('');
+    const [ccCep, setCcCep] = useState('');
+    const [ccAddressNumber, setCcAddressNumber] = useState('');
 
     const [pixData, setPixData] = useState<any>(null);
     const [isPixModalVisible, setIsPixModalVisible] = useState(false);
@@ -113,6 +116,14 @@ export default function RequestPaymentScreen() {
     const handleConfirmAndRequest = async () => {
         if (!session?.user.id) return;
 
+        // Basic validation for Credit Card
+        if (paymentMethod === 'credit_card') {
+            if (ccNumber.length < 16 || ccExpiry.length < 5 || ccCvv.length < 3 || !ccName || !ccCep || !ccAddressNumber) {
+                Alert.alert("Dados Incompletos", "Por favor, preencha todos os campos do cartão e o endereço de cobrança.");
+                return;
+            }
+        }
+
         try {
             setIsSubmitting(true);
 
@@ -129,7 +140,7 @@ export default function RequestPaymentScreen() {
                     destino_lng: requestDetails.destino?.longitude || -46.633,
                     valor: estimatedPrice,
                     distancia_km: distanceKm,
-                    status: paymentMethod === 'pix' ? 'pendente_pagamento' : 'buscando_motorista',
+                    status: 'pendente_pagamento', // Always set to pending payment initially
                     veiculo_placa: requestDetails.placa,
                     veiculo_cor: requestDetails.cor,
                     veiculo_marca_modelo: requestDetails.marcaModelo,
@@ -166,17 +177,23 @@ export default function RequestPaymentScreen() {
 
                     creditCardHolderInfo = {
                         name: ccName,
-                        email: session.user.email || 'cliente@ggflabs.com',
-                        cpfCnpj: '00000000000', // Asaas expects CPF format. Adjust dynamically in production
-                        postalCode: '01310100',
-                        addressNumber: '1000',
-                        phone: '11999999999'
+                        email: session.user.email || 'cliente@plataforma.com',
+                        cpfCnpj: cpf || '00000000000', 
+                        postalCode: ccCep.replace(/\D/g, ''),
+                        addressNumber: ccAddressNumber,
+                        phone: telefone || session.user.user_metadata?.phone || '11999999999'
                     };
                 }
 
                 console.log(`Generating ${billingType} for ride:`, rideData.id);
 
+                // Explicitly get session to ensure token is fresh and present
+                const { data: { session: freshSession } } = await supabase.auth.getSession();
+                
                 const { data: paymentRes, error: paymentError } = await supabase.functions.invoke('asaas-create-payment', {
+                    headers: {
+                        Authorization: `Bearer ${freshSession?.access_token || session?.access_token}`
+                    },
                     body: {
                         rideId: rideData.id,
                         clienteId: session.user.id,
@@ -189,18 +206,32 @@ export default function RequestPaymentScreen() {
 
                 if (paymentError || !paymentRes?.success) {
                     console.error(`Erro completo ao gerar ${billingType} no mobile:`, JSON.stringify(paymentError || paymentRes, null, 2));
-                    Alert.alert('Aviso', `Falha ao processar pagamento via ${billingType}. Continuaremos buscando um motorista, mas o pagamento deverá ser resolvido depois.`);
-                    router.replace('/(cliente)?searching=true');
+                    Alert.alert('Erro no Pagamento', `Não foi possível processar o seu pagamento via ${billingType}. Por favor, tente novamente ou mude o método.`);
+                    setIsSubmitting(false); // Changed from setIsLoading to setIsSubmitting
+                    return;
                 } else {
                     if (paymentMethod === 'pix') {
                         setPixData(paymentRes.pix);
                         setIsPixModalVisible(true);
-                    } else {
-                        // Cartão Aprovado
+                    }
+                    if (billingType === 'CREDIT_CARD') {
+                        // Cartão Aprovado - Atualiza status da corrida para buscar motorista
+                        await supabase
+                            .from('corridas')
+                            .update({ status: 'buscando_motorista' })
+                            .eq('id', rideData.id);
+                        
                         router.replace('/(cliente)?searching=true');
                     }
                 }
             } else {
+                // This block is for payment methods not handled by Asaas (e.g., cash, if implemented)
+                // For now, it's assumed all payment methods go through Asaas or are 'pendente_pagamento'
+                // If a non-Asaas payment method is added that doesn't require a pending state,
+                // this would be the place to set status to 'buscando_motorista' directly.
+                // For this change, we assume all paths lead to 'pendente_pagamento' initially,
+                // and then 'buscando_motorista' upon successful payment or manual update.
+                // So, this else block might need review depending on future payment methods.
                 router.replace('/(cliente)?searching=true');
             }
 
@@ -306,7 +337,7 @@ export default function RequestPaymentScreen() {
                                 placeholder="0000 0000 0000 0000"
                                 keyboardType="numeric"
                                 value={ccNumber}
-                                onChangeText={setCcNumber}
+                                onChangeText={(t) => setCcNumber(formatCardNumber(t))}
                                 maxLength={19}
                             />
 
@@ -327,7 +358,7 @@ export default function RequestPaymentScreen() {
                                         placeholder="MM/AA"
                                         keyboardType="numeric"
                                         value={ccExpiry}
-                                        onChangeText={setCcExpiry}
+                                        onChangeText={(t) => setCcExpiry(formatCardExpiry(t))}
                                         maxLength={5}
                                     />
                                 </View>
@@ -339,8 +370,32 @@ export default function RequestPaymentScreen() {
                                         keyboardType="numeric"
                                         secureTextEntry
                                         value={ccCvv}
-                                        onChangeText={setCcCvv}
+                                        onChangeText={(t) => setCcCvv(formatCVV(t))}
                                         maxLength={4}
+                                    />
+                                </View>
+                            </View>
+
+                            <View style={styles.formRow}>
+                                <View style={{ flex: 1, marginRight: 8 }}>
+                                    <Text style={styles.inputLabel}>CEP DE COBRANÇA</Text>
+                                    <TextInput
+                                        style={styles.input}
+                                        placeholder="00000-000"
+                                        keyboardType="numeric"
+                                        value={ccCep}
+                                        onChangeText={setCcCep}
+                                        maxLength={9}
+                                    />
+                                </View>
+                                <View style={{ flex: 1, marginLeft: 8 }}>
+                                    <Text style={styles.inputLabel}>NÚMERO</Text>
+                                    <TextInput
+                                        style={styles.input}
+                                        placeholder="123"
+                                        keyboardType="numeric"
+                                        value={ccAddressNumber}
+                                        onChangeText={setCcAddressNumber}
                                     />
                                 </View>
                             </View>

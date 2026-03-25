@@ -90,7 +90,8 @@ export default function Step1Personal() {
                 perfil_id: session?.user?.id!,
                 placa: placa.toUpperCase(),
                 marca_modelo: modelo,
-                tipo_plataforma_v2: tipoPlataforma, // Standardized column name
+                tipo: tipoPlataforma || 'Plataforma', // Satisfies NOT NULL constraint
+                tipo_plataforma_v2: tipoPlataforma, 
                 registro_antt: antt,
                 status: 'ativo'
             };

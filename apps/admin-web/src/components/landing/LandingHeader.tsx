@@ -15,7 +15,7 @@ export function LandingHeader() {
     return (
         <header className="w-full bg-black text-white py-4 px-6 md:px-12 flex items-center justify-between z-50 relative">
             <Link href="/" className="flex items-center gap-3 group">
-                <img src="/logo-oficial.png.png" alt="Guinchos e Reboques" className="w-[140px] md:w-[160px] h-auto object-contain" />
+                <img src="/logo.png" alt="Guinchos e Reboques" className="w-[140px] md:w-[160px] h-auto object-contain" />
             </Link>
 
             <nav className="hidden lg:flex items-center gap-10 text-[15px] font-bold tracking-wide text-white/90">

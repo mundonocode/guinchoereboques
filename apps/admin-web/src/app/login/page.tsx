@@ -95,7 +95,7 @@ export default function LoginPage() {
                 <div className="relative z-10 max-w-xl">
                     <div className="flex items-center gap-3 mb-10">
                         <Link href="/">
-                            <img src="/logo-oficial.png.png" alt="Guinchos e Reboques" className="w-[200px] h-auto object-contain cursor-pointer transition-opacity hover:opacity-80" />
+                            <img src="/logo.png" alt="Guinchos e Reboques" className="w-[200px] h-auto object-contain cursor-pointer transition-opacity hover:opacity-80" />
                         </Link>
                     </div>
 
@@ -125,7 +125,7 @@ export default function LoginPage() {
                 <div className="max-w-[400px] w-full space-y-10">
                     <div className="space-y-3">
                         <div className="lg:hidden flex items-center mb-8">
-                            <img src="/logo-oficial.png.png" alt="Guinchos e Reboques" className="w-[160px] h-auto object-contain" />
+                            <img src="/logo.png" alt="Guinchos e Reboques" className="w-[160px] h-auto object-contain" />
                         </div>
                         <h3 className="text-[32px] font-bold tracking-tight text-black leading-tight">Bem-vindo de volta</h3>
                         <p className="text-[15px] text-zinc-500 font-medium">Acesse sua conta para continuar.</p>

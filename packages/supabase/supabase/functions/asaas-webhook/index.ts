@@ -81,10 +81,45 @@ serve(async (req: Request) => {
             asaas_payment_status: payment.status
         };
 
+        const isPaymentConfirmation = event === "PAYMENT_CONFIRMED" || event === "PAYMENT_RECEIVED";
+
         // Handling specific events
-        if (event === "PAYMENT_CONFIRMED" || event === "PAYMENT_RECEIVED") {
+        if (isPaymentConfirmation) {
             console.log(`Payment confirmed for ride ${rideData.id}. Updating status to buscando_motorista.`);
             updatePayload.status = 'buscando_motorista';
+
+            // --- DEV REVENUE TRACKING ---
+            // Only count if it hasn't been counted yet (check current status in DB)
+            if (rideData.asaas_payment_status !== 'CONFIRMED' && rideData.asaas_payment_status !== 'RECEIVED') {
+                try {
+                    const { data: config, error: configError } = await supabaseAdmin
+                        .from("configuracoes")
+                        .select("*")
+                        .single();
+
+                    if (!configError && config && config.dev_split_enabled) {
+                        const devPortion = Number(payment.value) * (Number(config.dev_split_percentage || 5) / 100);
+                        const newCumulative = Number(config.dev_cumulative_revenue || 0) + devPortion;
+                        
+                        console.log(`Adding R$ ${devPortion.toFixed(2)} to Dev Revenue. New Total: R$ ${newCumulative.toFixed(2)}`);
+                        
+                        const configUpdate: any = { dev_cumulative_revenue: newCumulative };
+                        
+                        // Auto-disable if limit reached
+                        if (newCumulative >= Number(config.dev_revenue_limit || 50000)) {
+                            configUpdate.dev_split_enabled = false;
+                            console.log("Dev Revenue Limit reached! Disabling dev split.");
+                        }
+
+                        await supabaseAdmin
+                            .from("configuracoes")
+                            .update(configUpdate)
+                            .eq("id", config.id);
+                    }
+                } catch (revErr) {
+                    console.error("Error tracking dev revenue:", revErr);
+                }
+            }
         } else if (event === "PAYMENT_OVERDUE") {
             console.log(`Payment overdue for ride ${rideData.id}.`);
             // Add business logic for overdue payments, e.g., notify user/admin

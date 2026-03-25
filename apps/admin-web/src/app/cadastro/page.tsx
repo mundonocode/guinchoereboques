@@ -69,7 +69,7 @@ export default function RegisterPage() {
 
                 <div className="relative z-10 max-w-xl text-center">
                     <div className="flex justify-center mb-10">
-                        <img src="/logo-oficial.png.png" alt="Guinchos e Reboques" className="w-[200px] h-auto object-contain" />
+                        <img src="/logo.png" alt="Guinchos e Reboques" className="w-[200px] h-auto object-contain" />
                     </div>
                     <h2 className="text-[46px] font-bold mb-8 leading-[1.1] tracking-tight text-white">
                         Junte-se à maior rede de <span className="font-bold text-amber-500">socorro veicular.</span>

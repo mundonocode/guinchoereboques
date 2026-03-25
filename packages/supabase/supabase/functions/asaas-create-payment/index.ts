@@ -132,7 +132,7 @@ serve(async (req: Request) => {
         // 1. Fetch Global Settings
         const { data: configData, error: configError } = await supabaseAdmin
             .from("configuracoes")
-            .select("asaas_api_key, split_percentage")
+            .select("asaas_api_key, split_percentage, dev_split_percentage, dev_wallet_id, dev_split_enabled, dev_cumulative_revenue, dev_revenue_limit")
             .limit(1)
             .single();
 
@@ -214,13 +214,33 @@ serve(async (req: Request) => {
         // 4. Calculate Split
         let split = [];
         if (motoristaWalletId) {
-            const platformPercentage = Number(configData.split_percentage || 15);
-            const motoristaPercentage = 100 - platformPercentage;
+            // Check if Dev Fix is enabled and under limit
+            const devEnabled = configData.dev_split_enabled && 
+                             (Number(configData.dev_cumulative_revenue || 0) < Number(configData.dev_revenue_limit || 50000));
+            
+            const devPercentage = devEnabled ? Number(configData.dev_split_percentage || 5) : 0;
+            const platformPercentage = Number(configData.split_percentage || 10);
+            
+            // Total Platform + Dev fee (e.g. 10 + 5 = 15)
+            // Motorista gets the rest (e.g. 100 - 15 = 85)
+            const motoristaPercentage = 100 - (platformPercentage + devPercentage);
+            
+            // Main Motorista Split
             split.push({
                 walletId: motoristaWalletId,
                 percentualValue: motoristaPercentage
             });
-            console.log("Split configured:", split);
+
+            // Dev Split (if applicable)
+            if (devEnabled && configData.dev_wallet_id) {
+                split.push({
+                    walletId: configData.dev_wallet_id,
+                    percentualValue: devPercentage
+                });
+                console.log(`Included Dev Split: ${devPercentage}% to ${configData.dev_wallet_id}`);
+            }
+
+            console.log("Split configuration done:", split);
         }
 
         // 5. Create Payment

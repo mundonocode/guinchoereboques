@@ -60,7 +60,42 @@ export default function ActiveRideScreen() {
 
     useEffect(() => {
         fetchRideDetails();
-    }, [id]);
+
+        // Real-time subscription for external status changes (e.g. manual finalize or client cancel)
+        const channel = supabase
+            .channel(`ride_status_${id}`)
+            .on(
+                'postgres_changes',
+                {
+                    event: 'UPDATE',
+                    schema: 'public',
+                    table: 'corridas',
+                    filter: `id=eq.${id}`,
+                },
+                (payload) => {
+                    console.log('Update de status recebido via Realtime:', payload.new.status);
+                    const newStatus = payload.new.status;
+                    
+                    // Always update local state first so UI reacts immediately
+                    setRide(payload.new as any);
+
+                    if (newStatus === 'finalizada' && ride?.status !== 'finalizada') {
+                        Alert.alert('Corrida Finalizada', 'Esta corrida foi concluída com sucesso.', [
+                            { text: 'OK', onPress: () => router.replace('/(motorista)') }
+                        ]);
+                    } else if (newStatus === 'cancelada') {
+                        Alert.alert('Corrida Cancelada', 'Esta corrida foi cancelada pelo cliente ou sistema.', [
+                            { text: 'OK', onPress: () => router.replace('/(motorista)') }
+                        ]);
+                    }
+                }
+            )
+            .subscribe();
+
+        return () => {
+            supabase.removeChannel(channel);
+        };
+    }, [id, ride?.status]);
 
     const fetchRideDetails = async () => {
         try {
@@ -317,36 +352,30 @@ export default function ActiveRideScreen() {
                 {
                     ride.status === 'em_rota_destino' && (
                         <View>
-                            {!isNearDestination && (
+                            {isNearDestination ? (
+                                <TouchableOpacity
+                                    style={[
+                                        styles.mainBtn,
+                                        { backgroundColor: '#16A34A' }
+                                    ]}
+                                    onPress={() => updateRideStatus('finalizada')}
+                                    disabled={statusUpdating}
+                                >
+                                    {statusUpdating ? <ActivityIndicator color="#FFF" /> : (
+                                        <>
+                                            <CheckCircle size={20} color="#FFF" style={styles.btnIcon} />
+                                            <Text style={styles.mainBtnText}>Finalizar Reboque</Text>
+                                        </>
+                                    )}
+                                </TouchableOpacity>
+                            ) : (
                                 <View style={styles.warningBox}>
                                     <AlertTriangle size={16} color="#B45309" />
                                     <Text style={styles.warningText}>
-                                        O botão de finalizar ficará disponível quando você chegar ao destino.
+                                        Continue dirigindo até o destino para finalizar o serviço.
                                     </Text>
                                 </View>
                             )}
-                            <TouchableOpacity
-                                style={[
-                                    styles.mainBtn,
-                                    { backgroundColor: '#16A34A' },
-                                    !isNearDestination && { backgroundColor: '#D1FAE5', opacity: 0.6 }
-                                ]}
-                                onPress={() => {
-                                    if (!isNearDestination) {
-                                        Alert.alert("Aviso", "Você precisa estar no local de destino para finalizar a corrida.");
-                                        return;
-                                    }
-                                    updateRideStatus('finalizada');
-                                }}
-                                disabled={statusUpdating || !isNearDestination}
-                            >
-                                {statusUpdating ? <ActivityIndicator color="#FFF" /> : (
-                                    <>
-                                        <CheckCircle size={20} color="#FFF" style={styles.btnIcon} />
-                                        <Text style={styles.mainBtnText}>Finalizar Corrida</Text>
-                                    </>
-                                )}
-                            </TouchableOpacity>
                         </View>
                     )
                 }

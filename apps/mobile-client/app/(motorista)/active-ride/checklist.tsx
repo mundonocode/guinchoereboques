@@ -8,9 +8,12 @@ import SignatureScreen, { SignatureViewRef } from 'react-native-signature-canvas
 import { decode } from 'base64-arraybuffer';
 
 export default function ChecklistScreen() {
-    const { id } = useLocalSearchParams();
+    const { id: rawId } = useLocalSearchParams();
+    const id = Array.isArray(rawId) ? rawId[0] : rawId;
     const router = useRouter();
     const signatureRef = useRef<SignatureViewRef>(null);
+
+    console.log('Iniciando Checklist para corrida:', id);
 
     const [loading, setLoading] = useState(false);
     const [avarias, setAvarias] = useState('');
@@ -27,13 +30,59 @@ export default function ChecklistScreen() {
     const [showSignatureModal, setShowSignatureModal] = useState(false);
     const [signatureData, setSignatureData] = useState<string | null>(null);
 
+    const isComplete = !!(
+        fotos.frente &&
+        fotos.traseira &&
+        fotos.lateralEsq &&
+        fotos.lateralDir &&
+        signatureData
+    );
+
     const takePhoto = async (position: keyof typeof fotos) => {
-        const { status } = await ImagePicker.requestCameraPermissionsAsync();
-        if (status !== 'granted') {
-            Alert.alert('Atenção', 'Precisamos de permissão da câmera para tirar as fotos do checklist.');
+        // 1. Check current status without prompting
+        const { status: currentStatus, canAskAgain } = await ImagePicker.getCameraPermissionsAsync();
+
+        if (currentStatus === 'undetermined') {
+            // "Soft Ask" - explains why before system dialog
+            return new Promise((resolve) => {
+                Alert.alert(
+                    'Acesso à Câmera',
+                    'Para garantir a segurança do reboque e documentar o estado do veículo, precisamos tirar fotos dele. Podemos acessar sua câmera?',
+                    [
+                        { text: 'Agora não', style: 'cancel', onPress: () => resolve(null) },
+                        { 
+                            text: 'Sim, permitir', 
+                            onPress: async () => {
+                                const { status: newStatus } = await ImagePicker.requestCameraPermissionsAsync();
+                                if (newStatus === 'granted') {
+                                    proceedWithCamera(position);
+                                }
+                                resolve(null);
+                            }
+                        }
+                    ]
+                );
+            });
+        }
+
+        if (currentStatus !== 'granted') {
+            if (!canAskAgain) {
+                Alert.alert(
+                    'Permissão Negada',
+                    'A permissão de câmera foi negada. Por favor, habilite-a nas configurações do seu celular para continuar com o checklist.',
+                    [{ text: 'OK' }]
+                );
+            } else {
+                const { status: newStatus } = await ImagePicker.requestCameraPermissionsAsync();
+                if (newStatus === 'granted') proceedWithCamera(position);
+            }
             return;
         }
 
+        proceedWithCamera(position);
+    };
+
+    const proceedWithCamera = async (position: keyof typeof fotos) => {
         const result = await ImagePicker.launchCameraAsync({
             mediaTypes: ImagePicker.MediaTypeOptions.Images,
             allowsEditing: true,
@@ -187,9 +236,12 @@ export default function ChecklistScreen() {
             </View>
 
             <TouchableOpacity
-                style={styles.mainBtn}
+                style={[
+                    styles.mainBtn,
+                    (!isComplete || loading) && { backgroundColor: '#9CA3AF' }
+                ]}
                 onPress={handleFinalize}
-                disabled={loading}
+                disabled={loading || !isComplete}
             >
                 {loading ? <ActivityIndicator color="#FFF" /> : (
                     <>

@@ -30,6 +30,7 @@ export default function HomeScreen() {
     const [routeInfo, setRouteInfo] = useState<{ distance: number, duration: number } | null>(null);
     const [rideState, setRideState] = useState<'idle' | 'searching' | 'active'>('idle');
     const [currentRideId, setCurrentRideId] = useState<string | null>(null);
+    const [currentRideStatus, setCurrentRideStatus] = useState<string | null>(null);
     const [driverInfo, setDriverInfo] = useState<any>(null);
     const [rejectedDrivers, setRejectedDrivers] = useState<string[]>([]);
 
@@ -76,25 +77,70 @@ export default function HomeScreen() {
     }, [location]);
 
     useEffect(() => {
-        if (searching === 'true' && storeRideId && rideState === 'idle') {
-            // Check if ride is actually paid or ready
+        if (storeRideId && rideState === 'idle') {
+            console.log('Detected existing ride in store:', storeRideId, '. Checking status...');
             const checkRideStatus = async () => {
                 const { data } = await supabase.from('corridas').select('status').eq('id', storeRideId).single();
-                if (data?.status === 'pendente_pagamento') {
-                    // Keep in searching state UI but don't call findAndAssignDriver yet
-                    // The webhook or a manual check will transition it
+                const status = data?.status;
+                setCurrentRideStatus(status || null);
+                
+                if (status === 'pendente_pagamento') {
                     console.log('Ride is pending payment. Waiting...');
-                    setRideState('searching');
                     setCurrentRideId(storeRideId);
-                } else {
+                    setRideState('searching');
+                } else if (status === 'buscando_motorista') {
+                    console.log('Ride is in searching mode. Re-initiating search...');
                     setCurrentRideId(storeRideId);
                     setRideState('searching');
                     findAndAssignDriver(storeRideId, []);
+                } else if (['aceita', 'a_caminho', 'no_local', 'em_rota_destino'].includes(status)) {
+                    console.log('Ride is already active. Restoring active view...', status);
+                    setCurrentRideId(storeRideId);
+                    setRideState('active');
+
+                    // Importante: Buscar os dados do motorista para o overlay
+                    const { data: rideDetail } = await supabase
+                        .from('corridas')
+                        .select('motorista_id')
+                        .eq('id', storeRideId)
+                        .single();
+
+                    if (rideDetail?.motorista_id) {
+                        const { data } = await supabase
+                            .from('perfis')
+                            .select(`
+                                id,
+                                nome_completo, 
+                                telefone, 
+                                foto_url,
+                                avatar_url,
+                                veiculos_guincho (
+                                    placa,
+                                    tipo,
+                                    marca_modelo
+                                )
+                            `)
+                            .eq('id', rideDetail.motorista_id)
+                            .single();
+
+                        if (data) {
+                            const vehicle = Array.isArray(data.veiculos_guincho)
+                                ? data.veiculos_guincho[0]
+                                : data.veiculos_guincho;
+                            setDriverInfo({ ...data, vehicle });
+                        }
+                    }
+                } else {
+                    console.log('Ride is in an unknown or final state:', status);
+                    // Reset if final
+                    if (['finalizada', 'cancelada'].includes(status)) {
+                        setStoreRideId(null);
+                    }
                 }
             };
             checkRideStatus();
         }
-    }, [searching, storeRideId, rideState]);
+    }, [storeRideId, rideState]);
 
     useEffect(() => {
         if (!currentRideId || rideState === 'idle') return;
@@ -114,6 +160,7 @@ export default function HomeScreen() {
                 async (payload) => {
                     console.log('Ride update received:', payload.new);
                     const updatedRide = payload.new;
+                    setCurrentRideStatus(updatedRide.status);
 
                     if (updatedRide.status === 'aceita' || updatedRide.status === 'a_caminho') {
                         setRideState('active');
@@ -148,14 +195,14 @@ export default function HomeScreen() {
                             });
                         }
                     } else if (updatedRide.status === 'buscando_motorista' && rideState === 'searching') {
-                        // If it transitioned from pendente_pagamento to buscando_motorista
-                        console.log('Ride transitioned to searching for driver.');
+                        // Se transicionou de pendente_pagamento para buscando_motorista via Webhook ou Cartão
+                        console.log('Pagamento confirmado. Iniciando busca de motorista...');
                         if (!updatedRide.motorista_id) {
                             findAndAssignDriver(updatedRide.id, rejectedDrivers);
                         }
                     } else if (updatedRide.status === 'rejeitada') {
-                        // Driver rejected! Try to find another one.
-                        console.log('Driver rejected the ride. Searching for next...');
+                        // Motorista rejeitou! Tentar o próximo.
+                        console.log('Motorista rejeitou a corrida. Buscando próximo...');
                         const currentExcluded = [...rejectedDrivers, updatedRide.motorista_id];
                         setRejectedDrivers(currentExcluded);
                         findAndAssignDriver(updatedRide.id, currentExcluded);
@@ -172,6 +219,7 @@ export default function HomeScreen() {
                         Alert.alert("Corrida Cancelada", "O motorista cancelou o chamado.");
                         setRideState('idle');
                         setCurrentRideId(null);
+                        setCurrentRideStatus(null);
                         setDriverInfo(null);
                         router.replace('/(cliente)'); // Reset map
                     }
@@ -188,8 +236,8 @@ export default function HomeScreen() {
         try {
             // Check if ride is still active and needs a driver
             const { data: rideCheck } = await supabase.from('corridas').select('status').eq('id', rideId).single();
-            if (!rideCheck || (rideCheck.status !== 'buscando_motorista' && rideCheck.status !== 'pendente_pagamento')) {
-                console.log('Ride no longer active for driver assignment. Current status:', rideCheck?.status);
+            if (!rideCheck || rideCheck.status !== 'buscando_motorista') {
+                console.log('Busca interrompida: status não permitido para busca:', rideCheck?.status);
                 return;
             }
 
@@ -198,6 +246,8 @@ export default function HomeScreen() {
                 .select('id')
                 .eq('role', 'motorista')
                 .eq('is_online', true)
+                .eq('onboarding_completo', true)
+                .eq('is_active', true)
                 .not('id', 'in', `(${excludedIds.join(',')})`)
                 .order('created_at', { ascending: false })
                 .limit(1);
@@ -520,7 +570,13 @@ export default function HomeScreen() {
                 rideState === 'active' && driverInfo && (
                     <View style={[styles.searchingOverlay, { padding: 0, overflow: 'hidden' }]}>
                         <View style={styles.driverHeader}>
-                            <Text style={styles.driverStatusBar}>GUINCHEIRO A CAMINHO</Text>
+                            <Text style={styles.driverStatusBar}>
+                                {currentRideStatus === 'aceita' && 'GUINCHEIRO ACEITOU'}
+                                {currentRideStatus === 'a_caminho' && 'GUINCHEIRO A CAMINHO'}
+                                {currentRideStatus === 'no_local' && 'GUINCHEIRO NO LOCAL'}
+                                {currentRideStatus === 'em_rota_destino' && 'CARRO EM REBOQUE'}
+                                {(!currentRideStatus || !['aceita', 'a_caminho', 'no_local', 'em_rota_destino'].includes(currentRideStatus)) && 'GUINCHEIRO A CAMINHO'}
+                            </Text>
                         </View>
 
                         <View style={styles.driverCardContent}>
@@ -574,69 +630,74 @@ export default function HomeScreen() {
 
                             <View style={styles.actionButtonsRow}>
                                 <TouchableOpacity
-                                    style={styles.chatButton}
+                                    style={[
+                                        styles.chatButton,
+                                        (['em_rota_destino', 'no_local'].includes(currentRideStatus || '')) && { flex: 1 }
+                                    ]}
                                     onPress={() => setShowChat(true)}
                                 >
                                     <Text style={styles.chatButtonText}>Mensagem</Text>
                                 </TouchableOpacity>
 
-                                <TouchableOpacity
-                                    style={styles.cancelRideButton}
-                                    onPress={() => {
-                                        Alert.alert(
-                                            "Cancelar",
-                                            "Deseja realmente cancelar seu chamado?",
-                                            [
-                                                { text: "Não", style: "cancel" },
-                                                {
-                                                    text: "Sim",
-                                                    onPress: async () => {
-                                                        try {
-                                                            const { data: rideData } = await supabase
-                                                                .from('corridas')
-                                                                .select('asaas_payment_id, asaas_payment_status, metodo_pagamento')
-                                                                .eq('id', currentRideId)
-                                                                .single();
+                                {!['em_rota_destino', 'no_local'].includes(currentRideStatus || '') && (
+                                    <TouchableOpacity
+                                        style={styles.cancelRideButton}
+                                        onPress={() => {
+                                            Alert.alert(
+                                                "Cancelar",
+                                                "Deseja realmente cancelar seu chamado?",
+                                                [
+                                                    { text: "Não", style: "cancel" },
+                                                    {
+                                                        text: "Sim",
+                                                        onPress: async () => {
+                                                            try {
+                                                                const { data: rideData } = await supabase
+                                                                    .from('corridas')
+                                                                    .select('asaas_payment_id, asaas_payment_status, metodo_pagamento')
+                                                                    .eq('id', currentRideId)
+                                                                    .single();
 
-                                                            if (rideData?.asaas_payment_id &&
-                                                                rideData.metodo_pagamento === 'pix' &&
-                                                                (rideData.asaas_payment_status === 'RECEIVED' || rideData.asaas_payment_status === 'CONFIRMED')) {
+                                                                if (rideData?.asaas_payment_id &&
+                                                                    rideData.metodo_pagamento === 'pix' &&
+                                                                    (rideData.asaas_payment_status === 'RECEIVED' || rideData.asaas_payment_status === 'CONFIRMED')) {
 
-                                                                console.log('Solicitando estorno para corrida ativa:', currentRideId);
-                                                                await supabase.functions.invoke('asaas-refund-payment', {
-                                                                    body: { rideId: currentRideId }
-                                                                });
-                                                                setCancellationType('refunded');
-                                                                setShowCancellationModal(true);
-                                                            } else {
-                                                                console.log('Cancelando sem estorno (não pago ou outro método)...');
-                                                                const { error } = await supabase.from('corridas').update({ status: 'cancelada' }).eq('id', currentRideId);
-                                                                if (error) throw error;
+                                                                    console.log('Solicitando estorno para corrida ativa:', currentRideId);
+                                                                    await supabase.functions.invoke('asaas-refund-payment', {
+                                                                        body: { rideId: currentRideId }
+                                                                    });
+                                                                    setCancellationType('refunded');
+                                                                    setShowCancellationModal(true);
+                                                                } else {
+                                                                    console.log('Cancelando sem estorno (não pago ou outro método)...');
+                                                                    const { error } = await supabase.from('corridas').update({ status: 'cancelada' }).eq('id', currentRideId);
+                                                                    if (error) throw error;
+                                                                    setCancellationType('cancelled_only');
+                                                                    setShowCancellationModal(true);
+                                                                }
+                                                            } catch (err) {
+                                                                console.error("Erro no cancelamento:", err);
+                                                                await supabase.from('corridas').update({ status: 'cancelada' }).eq('id', currentRideId);
                                                                 setCancellationType('cancelled_only');
                                                                 setShowCancellationModal(true);
+                                                            } finally {
+                                                                setRideState('idle');
+                                                                setCurrentRideId(null);
+                                                                setStoreRideId(null);
+                                                                setDriverInfo(null);
+                                                                resetRequestDetails();
+                                                                router.replace({ pathname: '/(cliente)', params: {} } as any);
+                                                                router.setParams({ searching: 'false', destinationLat: '', destinationLng: '', destinationAddress: '' });
                                                             }
-                                                        } catch (err) {
-                                                            console.error("Erro no cancelamento:", err);
-                                                            await supabase.from('corridas').update({ status: 'cancelada' }).eq('id', currentRideId);
-                                                            setCancellationType('cancelled_only');
-                                                            setShowCancellationModal(true);
-                                                        } finally {
-                                                            setRideState('idle');
-                                                            setCurrentRideId(null);
-                                                            setStoreRideId(null);
-                                                            setDriverInfo(null);
-                                                            resetRequestDetails();
-                                                            router.replace({ pathname: '/(cliente)', params: {} } as any);
-                                                            router.setParams({ searching: 'false', destinationLat: '', destinationLng: '', destinationAddress: '' });
                                                         }
                                                     }
-                                                }
-                                            ]
-                                        );
-                                    }}
-                                >
-                                    <Text style={styles.cancelRideButtonText}>Cancelar</Text>
-                                </TouchableOpacity>
+                                                ]
+                                            );
+                                        }}
+                                    >
+                                        <Text style={styles.cancelRideButtonText}>Cancelar</Text>
+                                    </TouchableOpacity>
+                                )}
                             </View>
                         </View>
                     </View>

@@ -1,4 +1,6 @@
 import { create } from 'zustand';
+import { persist, createJSONStorage } from 'zustand/middleware';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 export interface TowRequestDetails {
     placa: string;
@@ -25,11 +27,19 @@ interface RequestStore {
     resetRequestDetails: () => void;
 }
 
-export const useRequestStore = create<RequestStore>((set) => ({
-    requestDetails: {},
-    currentRideId: null,
-    setRequestDetails: (details) =>
-        set((state) => ({ requestDetails: { ...state.requestDetails, ...details } })),
-    setCurrentRideId: (id) => set({ currentRideId: id }),
-    resetRequestDetails: () => set({ requestDetails: {}, currentRideId: null }),
-}));
+export const useRequestStore = create<RequestStore>()(
+    persist(
+        (set) => ({
+            requestDetails: {},
+            currentRideId: null,
+            setRequestDetails: (details) =>
+                set((state) => ({ requestDetails: { ...state.requestDetails, ...details } })),
+            setCurrentRideId: (id) => set({ currentRideId: id }),
+            resetRequestDetails: () => set({ requestDetails: {}, currentRideId: null }),
+        }),
+        {
+            name: 'tow-request-storage',
+            storage: createJSONStorage(() => AsyncStorage),
+        }
+    )
+);

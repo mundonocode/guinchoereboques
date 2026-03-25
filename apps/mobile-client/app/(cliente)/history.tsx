@@ -6,10 +6,12 @@ import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { Clock, MapPin, CheckCircle, XCircle, ChevronRight, Truck } from 'lucide-react-native';
 import { useRouter } from 'expo-router';
+import { useRequestStore } from '../../store/useRequestStore';
 
 export default function ClienteHistoryScreen() {
     const { session } = useAuth();
     const router = useRouter();
+    const { setCurrentRideId } = useRequestStore();
     const [rides, setRides] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
 
@@ -65,6 +67,7 @@ export default function ClienteHistoryScreen() {
                 onPress={() => {
                     // Se for corrida ativa, voltar pro mapa pra visualizar, senão só um detalhe visual
                     if (statusInfo.label === 'Em Andamento') {
+                        setCurrentRideId(item.id);
                         router.push('/(cliente)');
                     }
                 }}

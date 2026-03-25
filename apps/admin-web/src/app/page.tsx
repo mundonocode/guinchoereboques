@@ -267,7 +267,7 @@ export default function LandingPage() {
                     <div className="max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-16 md:gap-24 items-start">
                         {/* Logo Block */}
                         <div className="flex flex-col items-center justify-center p-8 bg-white rounded-[2rem] aspect-square md:aspect-auto md:h-full min-h-[300px]">
-                            <img src="/logo-guinchos-reboques.png" className="w-[220px] h-auto" alt="Guinchos e Reboques" />
+                            <img src="/logo.png" className="w-[220px] h-auto" alt="Guinchos e Reboques" />
                         </div>
 
                         {/* CTA Block */}

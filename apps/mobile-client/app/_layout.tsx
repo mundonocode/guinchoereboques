@@ -3,6 +3,7 @@ import { Stack, useRouter } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { AuthProvider, useAuth } from '../src/contexts/AuthContext';
 import { StatusBar } from 'expo-status-bar';
+import CPFModal from '../src/components/CPFModal';
 
 // Mantém a tela de splash visível durante o carregamento inicial de autenticação
 SplashScreen.preventAutoHideAsync();
@@ -50,6 +51,7 @@ function RootLayoutNav() {
         <Stack.Screen name="(motorista)" />
         <Stack.Screen name="modal" options={{ presentation: 'modal' }} />
       </Stack>
+      <CPFModal />
       <StatusBar style="auto" />
     </>
   );

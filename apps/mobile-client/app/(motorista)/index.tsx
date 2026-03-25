@@ -6,7 +6,7 @@ import { useRouter } from 'expo-router';
 import { supabase } from '../../src/lib/supabase';
 import { useAuth } from '../../src/contexts/AuthContext';
 import { useLocation } from '../../src/hooks/useLocation';
-import { Truck, AlertTriangle, Power } from 'lucide-react-native';
+import { Truck, AlertTriangle, Power, Star, X } from 'lucide-react-native';
 import IncomingRideModal from '../../src/components/IncomingRideModal';
 import * as Notifications from 'expo-notifications';
 import { Audio } from 'expo-av';
@@ -38,6 +38,39 @@ export default function MotoristaHomeScreen() {
 
     const [incomingRide, setIncomingRide] = useState<any>(null);
     const [sound, setSound] = useState<Audio.Sound | null>(null);
+    const [showFeedback, setShowFeedback] = useState<{ nota: number, comentario: string | null } | null>(null);
+
+    useEffect(() => {
+        if (!session?.user?.id) return;
+
+        console.log('Iniciando listener de avaliações para:', session.user.id);
+        const channel = supabase
+            .channel('driver_feedback')
+            .on(
+                'postgres_changes',
+                {
+                    event: 'INSERT',
+                    schema: 'public',
+                    table: 'avaliacoes',
+                    filter: `avaliado_id=eq.${session.user.id}`,
+                },
+                (payload) => {
+                    console.log('Novo feedback recebido:', payload.new);
+                    setShowFeedback({
+                        nota: payload.new.nota,
+                        comentario: payload.new.comentario
+                    });
+
+                    // Auto hide after 10 seconds
+                    setTimeout(() => setShowFeedback(null), 10000);
+                }
+            )
+            .subscribe();
+
+        return () => {
+            supabase.removeChannel(channel);
+        };
+    }, [session?.user?.id]);
 
     useEffect(() => {
         setupNotifications();
@@ -106,6 +139,13 @@ export default function MotoristaHomeScreen() {
                 if (!error && data) {
                     setIsActiveProfile(data.is_active);
 
+                    // Se o cadastro estiver incompleto ou a conta não estiver ativa, 
+                    // garantimos que o motorista fique offline para não receber chamados.
+                    if (data.onboarding_completo === false || data.is_active === false) {
+                        setIsOnline(false);
+                        await supabase.from('perfis').update({ is_online: false }).eq('id', session.user.id);
+                    }
+
                     // Redirecionamento baseado no campo específico de onboarding
                     if (data.onboarding_completo === false || data.onboarding_completo === null) {
                         router.replace('/(motorista)/onboarding/step1-personal');
@@ -133,7 +173,7 @@ export default function MotoristaHomeScreen() {
                 .eq('status', 'buscando_motorista')
                 .order('created_at', { ascending: false })
                 .limit(1)
-                .single();
+                .maybeSingle();
 
             if (data && !error) {
                 console.log('Fetched pending ride:', data);
@@ -143,8 +183,25 @@ export default function MotoristaHomeScreen() {
             }
         }
 
-        // Execute fetch immediately
+        // 2. Fetch any ALREADY active ride to restore session
+        async function checkActiveRide() {
+            const { data, error } = await supabase
+                .from('corridas')
+                .select('id, status')
+                .eq('motorista_id', session!.user.id)
+                .in('status', ['aceita', 'a_caminho', 'no_local', 'em_rota_destino'])
+                .order('created_at', { ascending: false })
+                .limit(1)
+                .maybeSingle();
+
+            if (data && !error) {
+                console.log('Driver has active ride, restoring session...', data.id);
+                router.replace(`/(motorista)/active-ride/${data.id}`);
+            }
+        }
+
         fetchPendingRide();
+        checkActiveRide();
 
         console.log('Obtaining Realtime Subscription for corridas...');
 
@@ -196,21 +253,61 @@ export default function MotoristaHomeScreen() {
     }, [session, isOnline]);
 
     const handleAcceptRide = async (rideId: string) => {
+        console.log('Accepting ride:', rideId, 'as driver:', session?.user?.id);
+        
         try {
-            const { error } = await supabase
+            // First, double check the ride status to avoid race conditions
+            const { data: currentRide, error: fetchError } = await supabase
+                .from('corridas')
+                .select('status, motorista_id')
+                .eq('id', rideId)
+                .maybeSingle();
+
+            if (fetchError) throw fetchError;
+
+            if (!currentRide) {
+                Alert.alert('Aviso', 'Esta corrida não existe mais.');
+                setIncomingRide(null);
+                return;
+            }
+
+            // Se já estiver aceita por MIM, apenas navegamos
+            if (currentRide.status === 'aceita' && currentRide.motorista_id === session?.user?.id) {
+                console.log('Ride already accepted by this driver, navigating...');
+                setIncomingRide(null);
+                setIsOnline(false);
+                router.push(`/(motorista)/active-ride/${rideId}`);
+                return;
+            }
+
+            if (currentRide.status !== 'buscando_motorista') {
+                Alert.alert('Aviso', 'Esta corrida já foi aceita ou cancelada.');
+                setIncomingRide(null);
+                return;
+            }
+
+            const { error, data } = await supabase
                 .from('corridas')
                 .update({ status: 'aceita' })
                 .eq('id', rideId)
-                .eq('motorista_id', session?.user?.id); // Extra safety
+                .eq('motorista_id', session?.user?.id)
+                .select();
 
-            if (error) throw error;
+            if (error) {
+                console.error('Supabase error updating ride:', error);
+                throw error;
+            }
+
+            if (!data || data.length === 0) {
+                throw new Error('Não foi possível atualizar a corrida. Verifique sua conexão.');
+            }
 
             setIncomingRide(null);
             setIsOnline(false); // Go offline for new rides while executing this one
             router.push(`/(motorista)/active-ride/${rideId}`);
-        } catch (err) {
-            console.error('Failed to accept ride', err);
-            Alert.alert('Erro', 'Não foi possível aceitar a corrida.');
+        } catch (err: any) {
+            console.error('Failed to accept ride. Detail:', err?.message || err);
+            Alert.alert('Erro', 'Não foi possível aceitar a corrida: ' + (err?.message || 'Erro interno'));
             setIncomingRide(null);
         }
     };
