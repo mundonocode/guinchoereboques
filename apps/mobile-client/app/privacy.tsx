@@ -24,61 +24,60 @@ export default function PrivacyPolicyScreen() {
                 <View style={styles.section}>
                     <Text style={styles.sectionTitle}>1. Declaração e Consentimento</Text>
                     <Text style={styles.paragraph}>
-                        Ao aceitar a presente Política de Privacidade, você autoriza a Guinchos e Reboque a tratar seus dados pessoais constantes nos formulários disponibilizados através de nossos websites (formulário de newsletter, contato ou conta), dos quais confirma ser titular, bem como dos dados relativos à sua relação comercial e contratual, em conformidade com a Lei Geral de Proteção de Dados (LGPD – Lei nº 13.709/2018).
+                        Ao aceitar a presente Política de Privacidade, você autoriza a Guinchos e Reboque a tratar seus dados pessoais constantes nos formulários disponibilizados (newsletter, contato ou conta), bem como dados relativos à relação comercial e contratual, em conformidade com a LGPD (Lei nº 13.709/2018).
                     </Text>
                     <Text style={[styles.paragraph, { marginTop: 12 }]}>
-                        Você declara estar ciente de que o tratamento engloba todas as operações efetuadas sobre os dados transmitidos, podendo ser feito por meios automatizados ou não, com finalidades como: melhoria das funcionalidades, personalização dos serviços, processamento de transações e comunicações sobre atualizações de serviços.
+                        O tratamento engloba operações automatizadas ou não, com fins de: melhorar funcionalidades, personalização do serviço, processamento de transações, contato e marketing.
                     </Text>
                 </View>
 
                 <View style={styles.section}>
                     <Text style={styles.sectionTitle}>2. Finalidades e Base Legal</Text>
-                    <Text style={styles.paragraph}>
-                        Tratamos seus dados com base nas seguintes justificativas:
-                    </Text>
                     <View style={styles.bulletList}>
-                        <Text style={styles.bulletItem}>• <Text style={styles.bold}>Execução de contrato:</Text> Prestação dos serviços de guincho contratados.</Text>
-                        <Text style={styles.bulletItem}>• <Text style={styles.bold}>Legítimo interesse:</Text> Melhoria de serviços e análise estatística.</Text>
-                        <Text style={styles.bulletItem}>• <Text style={styles.bold}>Consentimento:</Text> Envio de marketing e newsletters.</Text>
-                        <Text style={styles.bulletItem}>• <Text style={styles.bold}>Obrigação legal:</Text> Atendimento a exigências fiscais e regulatórias.</Text>
+                        <Text style={styles.bulletItem}>• <Text style={styles.bold}>Execução de contrato:</Text> Prestação dos serviços de reboque;</Text>
+                        <Text style={styles.bulletItem}>• <Text style={styles.bold}>Legítimo interesse:</Text> Melhoria de serviços e análises;</Text>
+                        <Text style={styles.bulletItem}>• <Text style={styles.bold}>Consentimento:</Text> Marketing e newsletters;</Text>
+                        <Text style={styles.bulletItem}>• <Text style={styles.bold}>Obrigação legal:</Text> Exigências fiscais e regulatórias.</Text>
                     </View>
                 </View>
 
                 <View style={styles.section}>
                     <Text style={styles.sectionTitle}>3. Coleta e Utilização</Text>
                     <Text style={styles.paragraph}>
-                        Apenas coletamos dados fornecidos voluntariamente via formulários ou contato direto. Os dados podem incluir: nome, e-mail, telefone, CPF, endereço e informações do veículo necessárias para o atendimento.
-                    </Text>
-                </View>
-
-                <View style={styles.section}>
-                    <Text style={styles.sectionTitle}>4. Segurança das Informações</Text>
-                    <Text style={styles.paragraph}>
-                        Empregamos medidas técnicas e organizacionais adequadas para proteger seus dados pessoais contra acessos não autorizados, alteração, divulgação ou destruição.
-                    </Text>
-                </View>
-
-                <View style={styles.section}>
-                    <Text style={styles.sectionTitle}>5. Retenção de Dados</Text>
-                    <View style={styles.bulletList}>
-                        <Text style={styles.bulletItem}>• <Text style={styles.bold}>Dados contratuais:</Text> Durante o contrato e por até 5 anos após.</Text>
-                        <Text style={styles.bulletItem}>• <Text style={styles.bold}>Dados de marketing:</Text> Até revogação ou 2 anos sem interação.</Text>
-                        <Text style={styles.bulletItem}>• <Text style={styles.bold}>Dados fiscais:</Text> Conforme prazos da legislação tributária.</Text>
-                    </View>
-                </View>
-
-                <View style={styles.section}>
-                    <Text style={styles.sectionTitle}>6. Seus Direitos (LGPD)</Text>
-                    <Text style={styles.paragraph}>
-                        Você possui os seguintes direitos: Confirmação e acesso, Correção, Anonimização ou Bloqueio, Portabilidade e Revogação do consentimento.
+                        Coletamos dados fornecidos voluntariamente: nome, e-mail, telefone, CPF, endereço e dados do veículo. Esses dados permitem personalizar sua experiência, processar pagamentos e cumprir obrigações legais.
                     </Text>
                     <Text style={[styles.paragraph, { marginTop: 12 }]}>
-                        Solicitações podem ser feitas pelo e-mail: <Text style={styles.link}>contato@guinchosereboques.com.br</Text>. Você também tem o direito de reclamar à ANPD.
+                        Não vendemos ou transferimos dados para terceiros não autorizados. Entidades subcontratadas seguem as mesmas regras de proteção.
+                    </Text>
+                </View>
+
+                <View style={styles.section}>
+                    <Text style={styles.sectionTitle}>4. Segurança e Retenção</Text>
+                    <Text style={styles.paragraph}>
+                        Empregamos medidas técnicas como criptografia e controles de acesso. Seus dados são mantidos pelo período necessário (contratual por até 5 anos, marketing por até 2 anos).
+                    </Text>
+                </View>
+
+                <View style={styles.section}>
+                    <Text style={styles.sectionTitle}>5. Seus Direitos (LGPD)</Text>
+                    <Text style={styles.paragraph}>
+                        Você possui direito de: acesso, correção, anonimização, portabilidade, eliminação e revogação do consentimento.
+                    </Text>
+                    <Text style={[styles.paragraph, { marginTop: 12 }]}>
+                        Para exercer seus direitos, contate: <Text style={styles.link}>contato@guinchosereboques.com.br</Text>.
+                    </Text>
+                </View>
+
+                <View style={styles.section}>
+                    <Text style={styles.sectionTitle}>6. Encarregado de Dados</Text>
+                    <Text style={styles.paragraph}>
+                        Questões sobre proteção de dados podem ser enviadas diretamente para o e-mail: <Text style={styles.bold}>contato@guinchosereboques.com.br</Text>.
                     </Text>
                 </View>
 
                 <Text style={styles.footerText}>
-                    Ao utilizar este aplicativo, você concorda expressamente com os termos da Guinchos e Reboque.
+                    Ao utilizar este aplicativo, você concorda expressamente com esta Política de Privacidade.
+                </Text>r este aplicativo, você concorda expressamente com os termos da Guinchos e Reboque.
                 </Text>
             </ScrollView>
         </SafeAreaView>

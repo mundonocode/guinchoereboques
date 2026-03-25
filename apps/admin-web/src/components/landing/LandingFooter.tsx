@@ -53,7 +53,7 @@ export function LandingFooter() {
                                 Para Empresas
                             </Link>
                         </li>
-                        <li><Link href="#faq" className="hover:text-amber-500 transition-colors border-b border-white/50 pb-0.5 inline-block hover:border-amber-500">Política de Privacidade</Link></li>
+                        <li><Link href="/politica-privacidade" className="hover:text-amber-500 transition-colors border-b border-white/50 pb-0.5 inline-block hover:border-amber-500">Política de Privacidade</Link></li>
                     </ul>
                 </div>
 
