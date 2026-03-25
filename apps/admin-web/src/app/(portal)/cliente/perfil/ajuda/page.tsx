@@ -31,18 +31,32 @@ export default function AjudaPage() {
                         </div>
                         <div>
                             <p className="text-sm font-bold text-gray-900">Telefone / WhatsApp</p>
-                            <p className="text-sm text-gray-500">0800 123 4567</p>
+                            <p className="text-sm text-gray-500">83 99195-0841</p>
                         </div>
                     </div>
-                    <div className="flex items-center p-4">
+                    <div className="flex items-center p-4 border-b border-gray-50">
                         <div className="w-10 h-10 rounded-full bg-blue-50 flex items-center justify-center mr-4">
                             <Mail size={20} className="text-blue-500" />
                         </div>
                         <div>
                             <p className="text-sm font-bold text-gray-900">E-mail</p>
-                            <p className="text-sm text-gray-500">suporte@guincho.pro</p>
+                            <p className="text-sm text-gray-500">sac@guinchosereboques.com.br</p>
                         </div>
                     </div>
+                    <a 
+                        href="https://www.instagram.com/guinchosireboques?igsh=ZXo2MTh4dDB3OTRo" 
+                        target="_blank" 
+                        rel="noopener noreferrer" 
+                        className="flex items-center p-4 active:bg-gray-50 transition-colors"
+                    >
+                        <div className="w-10 h-10 rounded-full bg-pink-50 flex items-center justify-center mr-4">
+                            <HelpCircle size={20} className="text-pink-500" />
+                        </div>
+                        <div className="flex-1">
+                            <p className="text-sm font-bold text-gray-900">Instagram</p>
+                            <p className="text-sm text-gray-500">@guinchosireboques</p>
+                        </div>
+                    </a>
                 </div>
 
                 <button

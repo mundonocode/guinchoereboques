@@ -17,40 +17,68 @@ export default function PrivacyPolicyScreen() {
                 <View style={{ width: 24 }} />
             </View>
 
-            <ScrollView contentContainerStyle={styles.container}>
-                <Text style={styles.title}>Política de Privacidade e Termos de Uso</Text>
-                <Text style={styles.lastUpdated}>Última atualização: 23 de Fevereiro de 2026</Text>
+            <ScrollView contentContainerStyle={styles.container} showsVerticalScrollIndicator={false}>
+                <Text style={styles.title}>Política de Privacidade – Guinchos e Reboque</Text>
+                <Text style={styles.lastUpdated}>Última atualização: 10 de Setembro de 2025</Text>
 
                 <View style={styles.section}>
-                    <Text style={styles.sectionTitle}>1. Coleta de Dados</Text>
+                    <Text style={styles.sectionTitle}>1. Declaração e Consentimento</Text>
                     <Text style={styles.paragraph}>
-                        Coletamos informações básicas como nome, telefone, CPF e localização para possibilitar a prestação de serviços de guincho e reboque. Sua localização é compartilhada com o motorista apenas após a aceitação do serviço.
+                        Ao aceitar a presente Política de Privacidade, você autoriza a Guinchos e Reboque a tratar seus dados pessoais constantes nos formulários disponibilizados através de nossos websites (formulário de newsletter, contato ou conta), dos quais confirma ser titular, bem como dos dados relativos à sua relação comercial e contratual, em conformidade com a Lei Geral de Proteção de Dados (LGPD – Lei nº 13.709/2018).
+                    </Text>
+                    <Text style={[styles.paragraph, { marginTop: 12 }]}>
+                        Você declara estar ciente de que o tratamento engloba todas as operações efetuadas sobre os dados transmitidos, podendo ser feito por meios automatizados ou não, com finalidades como: melhoria das funcionalidades, personalização dos serviços, processamento de transações e comunicações sobre atualizações de serviços.
                     </Text>
                 </View>
 
                 <View style={styles.section}>
-                    <Text style={styles.sectionTitle}>2. Uso das Informações</Text>
+                    <Text style={styles.sectionTitle}>2. Finalidades e Base Legal</Text>
                     <Text style={styles.paragraph}>
-                        Seus dados são utilizados exclusivamente para a operação do aplicativo, incluindo o despacho de chamados, processamento de pagamentos e suporte técnico.
+                        Tratamos seus dados com base nas seguintes justificativas:
+                    </Text>
+                    <View style={styles.bulletList}>
+                        <Text style={styles.bulletItem}>• <Text style={styles.bold}>Execução de contrato:</Text> Prestação dos serviços de guincho contratados.</Text>
+                        <Text style={styles.bulletItem}>• <Text style={styles.bold}>Legítimo interesse:</Text> Melhoria de serviços e análise estatística.</Text>
+                        <Text style={styles.bulletItem}>• <Text style={styles.bold}>Consentimento:</Text> Envio de marketing e newsletters.</Text>
+                        <Text style={styles.bulletItem}>• <Text style={styles.bold}>Obrigação legal:</Text> Atendimento a exigências fiscais e regulatórias.</Text>
+                    </View>
+                </View>
+
+                <View style={styles.section}>
+                    <Text style={styles.sectionTitle}>3. Coleta e Utilização</Text>
+                    <Text style={styles.paragraph}>
+                        Apenas coletamos dados fornecidos voluntariamente via formulários ou contato direto. Os dados podem incluir: nome, e-mail, telefone, CPF, endereço e informações do veículo necessárias para o atendimento.
                     </Text>
                 </View>
 
                 <View style={styles.section}>
-                    <Text style={styles.sectionTitle}>3. Segurança</Text>
+                    <Text style={styles.sectionTitle}>4. Segurança das Informações</Text>
                     <Text style={styles.paragraph}>
-                        Empregamos medidas de segurança técnicas e organizacionais para proteger seus dados contra acesso não autorizado, perda ou alteração.
+                        Empregamos medidas técnicas e organizacionais adequadas para proteger seus dados pessoais contra acessos não autorizados, alteração, divulgação ou destruição.
                     </Text>
                 </View>
 
                 <View style={styles.section}>
-                    <Text style={styles.sectionTitle}>4. Seus Direitos</Text>
+                    <Text style={styles.sectionTitle}>5. Retenção de Dados</Text>
+                    <View style={styles.bulletList}>
+                        <Text style={styles.bulletItem}>• <Text style={styles.bold}>Dados contratuais:</Text> Durante o contrato e por até 5 anos após.</Text>
+                        <Text style={styles.bulletItem}>• <Text style={styles.bold}>Dados de marketing:</Text> Até revogação ou 2 anos sem interação.</Text>
+                        <Text style={styles.bulletItem}>• <Text style={styles.bold}>Dados fiscais:</Text> Conforme prazos da legislação tributária.</Text>
+                    </View>
+                </View>
+
+                <View style={styles.section}>
+                    <Text style={styles.sectionTitle}>6. Seus Direitos (LGPD)</Text>
                     <Text style={styles.paragraph}>
-                        Você pode solicitar a exclusão de seus dados a qualquer momento através da nossa central de suporte.
+                        Você possui os seguintes direitos: Confirmação e acesso, Correção, Anonimização ou Bloqueio, Portabilidade e Revogação do consentimento.
+                    </Text>
+                    <Text style={[styles.paragraph, { marginTop: 12 }]}>
+                        Solicitações podem ser feitas pelo e-mail: <Text style={styles.link}>contato@guinchosereboques.com.br</Text>. Você também tem o direito de reclamar à ANPD.
                     </Text>
                 </View>
 
                 <Text style={styles.footerText}>
-                    Ao utilizar este aplicativo, você concorda com os termos aqui descritos.
+                    Ao utilizar este aplicativo, você concorda expressamente com os termos da Guinchos e Reboque.
                 </Text>
             </ScrollView>
         </SafeAreaView>
@@ -100,12 +128,30 @@ const styles = StyleSheet.create({
         fontSize: 18,
         fontWeight: '700',
         color: '#1F2937',
-        marginBottom: 8,
+        marginBottom: 10,
     },
     paragraph: {
-        fontSize: 16,
+        fontSize: 15,
         color: '#4B5563',
-        lineHeight: 24,
+        lineHeight: 22,
+    },
+    bulletList: {
+        marginTop: 8,
+        paddingLeft: 4,
+    },
+    bulletItem: {
+        fontSize: 15,
+        color: '#4B5563',
+        lineHeight: 22,
+        marginBottom: 6,
+    },
+    bold: {
+        fontWeight: '700',
+        color: '#1F2937',
+    },
+    link: {
+        color: '#3B82F6',
+        fontWeight: '600',
     },
     footerText: {
         fontSize: 14,

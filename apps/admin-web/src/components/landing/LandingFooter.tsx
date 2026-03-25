@@ -82,7 +82,12 @@ export function LandingFooter() {
                     <div className="space-y-4">
                         <h4 className="text-[15px] font-bold text-white tracking-tight">Redes Sociais</h4>
                         <div className="flex items-center gap-3">
-                            <a href="#" className="w-8 h-8 bg-amber-500 rounded-full flex items-center justify-center hover:bg-amber-400 transition-colors">
+                            <a 
+                                href="https://www.instagram.com/guinchosireboques?igsh=ZXo2MTh4dDB3OTRo" 
+                                target="_blank" 
+                                rel="noopener noreferrer" 
+                                className="w-8 h-8 bg-amber-500 rounded-full flex items-center justify-center hover:bg-amber-400 transition-colors"
+                            >
                                 <Instagram size={18} className="text-black" />
                             </a>
                             <a href="#" className="w-8 h-8 bg-amber-500 rounded-full flex items-center justify-center hover:bg-amber-400 transition-colors">

@@ -8,11 +8,15 @@ export default function SupportScreen() {
     const router = useRouter();
 
     const openWhatsApp = () => {
-        Linking.openURL('whatsapp://send?phone=5500000000000&text=Olá, preciso de suporte no app Guincho e Reboques');
+        Linking.openURL('https://wa.me/5583991950841?text=Olá, preciso de suporte no app Guincho e Reboques');
     };
 
     const openEmail = () => {
-        Linking.openURL('mailto:suporte@exemplo.com.br?subject=Suporte App Guincho');
+        Linking.openURL('mailto:sac@guinchosereboques.com.br?subject=Suporte App Guincho');
+    };
+
+    const openInstagram = () => {
+        Linking.openURL('https://www.instagram.com/guinchosireboques?igsh=ZXo2MTh4dDB3OTRo');
     };
 
     return (
@@ -41,7 +45,7 @@ export default function SupportScreen() {
                         </View>
                         <View style={styles.contactInfo}>
                             <Text style={styles.contactLabel}>WhatsApp</Text>
-                            <Text style={styles.contactValue}>(00) 00000-0000</Text>
+                            <Text style={styles.contactValue}>(83) 99195-0841</Text>
                         </View>
                     </TouchableOpacity>
 
@@ -51,7 +55,17 @@ export default function SupportScreen() {
                         </View>
                         <View style={styles.contactInfo}>
                             <Text style={styles.contactLabel}>E-mail</Text>
-                            <Text style={styles.contactValue}>suporte@exemplo.com.br</Text>
+                            <Text style={styles.contactValue}>sac@guinchosereboques.com.br</Text>
+                        </View>
+                    </TouchableOpacity>
+
+                    <TouchableOpacity style={styles.contactItem} onPress={openInstagram}>
+                        <View style={[styles.iconBox, { backgroundColor: '#FDF2F8' }]}>
+                            <HelpCircle size={24} color="#BE185D" />
+                        </View>
+                        <View style={styles.contactInfo}>
+                            <Text style={styles.contactLabel}>Instagram</Text>
+                            <Text style={styles.contactValue}>@guinchosireboques</Text>
                         </View>
                     </TouchableOpacity>
                 </View>
